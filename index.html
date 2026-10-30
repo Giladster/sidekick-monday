@@ -83,6 +83,16 @@ button, input, textarea { font: inherit; color: inherit; }
   padding-block: 10px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
 }
+.me { display: flex; align-items: center; gap: 10px; }
+.me-avatar {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--c-value), var(--c-trust)); color: #fff; font-weight: 700; font-size: 15px;
+}
+.me-text { display: flex; flex-direction: column; line-height: 1.2; }
+.me-text strong { font-size: 15px; }
+.me-text small { font-size: 12px; color: var(--muted); }
+.eyebrow { font-size: 19px; font-weight: 600; color: var(--muted-strong); margin: 0 0 4px; }
+.eyebrow b { background: linear-gradient(90deg, var(--c-data), var(--c-control)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .brand { font-weight: 600; font-size: 19px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
 .brand-mark {
   width: 26px; height: 26px; border-radius: 8px;
@@ -228,11 +238,12 @@ h1 {
 @media (hover: none) { .tile .icon-btn { opacity: 1; } }
 
 /* New card: subtle fade in, then a gentle settle */
-.tile.enter { animation: tileIn 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.tile.enter { animation: tileIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 @keyframes tileIn {
-  0% { opacity: 0; transform: translateY(14px) scale(0.96); }
-  45% { opacity: 1; transform: translateY(0) scale(1.025); }
-  70% { transform: scale(0.992); }
+  0% { opacity: 0; transform: translateY(16px) scale(0.94); }
+  40% { opacity: 1; transform: translateY(0) scale(1.045); }
+  62% { transform: scale(0.982); }
+  82% { transform: scale(1.008); }
   100% { opacity: 1; transform: none; }
 }
 .tile.leave { animation: tileOut 0.28s ease-in both; pointer-events: none; }
@@ -447,6 +458,146 @@ textarea::placeholder { color: var(--muted); }
 .gap-row small { display: block; color: var(--muted); font-size: 14px; }
 .note { font-size: 13px; color: var(--muted); text-align: center; margin: 0; }
 
+/* Card actions: star, pin, delete, drag */
+.tile-top { display: flex; align-items: center; gap: 6px; padding-right: 0; }
+.tile-top .tag { margin-right: auto; }
+.tile .icon-btn, .tile-top .icon-btn { position: static; opacity: 1; }
+.tile .act { opacity: 0; transition: opacity 0.2s; }
+.tile:hover .act, .tile:focus-within .act, .tile .act.on { opacity: 1; }
+@media (hover: none) { .tile .act { opacity: 1; } }
+.act.on[data-a="star"] { color: var(--c-cost); background: color-mix(in srgb, var(--c-cost) 16%, transparent); }
+.act.on[data-a="pin"] { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.act[data-a="del"]:hover { color: var(--live); background: color-mix(in srgb, var(--live) 12%, transparent); }
+.act[data-a="star"]:hover, .act[data-a="pin"]:hover { background: var(--fill); color: var(--fg); }
+.icon-btn svg { width: 16px; height: 16px; }
+.tile.pinned { border-color: color-mix(in srgb, var(--accent) 35%, transparent); }
+.tile[draggable="true"] { cursor: grab; }
+.dragging { opacity: 0.35; }
+.drag-over { outline: 2px dashed color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 4px; }
+.board-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: -18px; }
+.mini-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: 11px; background: var(--seg); align-self: flex-start; }
+.mini-seg button {
+  border: 0; background: none; cursor: pointer; font-size: 15px; font-weight: 500; padding: 7px 14px; border-radius: 8px; color: var(--fg);
+}
+.mini-seg button[aria-pressed="true"] { background: var(--seg-on); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); font-weight: 600; }
+.mini-seg span { color: var(--muted); font-variant-numeric: tabular-nums; margin-left: 2px; }
+
+/* Card: key fact, rewrite */
+.short {
+  margin: 0; font-size: 21px; font-weight: 700; line-height: 1.35; letter-spacing: -0.01em;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.short i {
+  flex: none; width: 28px; height: 28px; border-radius: 50%; margin-top: 1px;
+  background: var(--good); color: #fff; display: grid; place-items: center; font-style: normal; font-size: 15px;
+}
+.card .answer { color: var(--muted-strong); font-size: 18px; }
+.card-actions { display: flex; align-items: center; gap: 4px; }
+.ai-btn {
+  border: 0; background: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 15px; font-weight: 600; color: var(--c-control); padding: 6px 10px; border-radius: 980px;
+}
+.ai-btn:hover { background: color-mix(in srgb, var(--c-control) 10%, transparent); }
+.ai-btn svg { width: 16px; height: 16px; }
+.rewrite { display: flex; gap: 8px; background: var(--fill); border-radius: 16px; padding: 6px 6px 6px 16px; }
+.rewrite input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: 16px; }
+.rewrite .btn { padding: 9px 16px; font-size: 15px; }
+.tailoring { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+.tailoring .thinking { padding: 0; }
+.tailoring .thinking span { width: 6px; height: 6px; }
+.fade-swap { animation: fadeSwap 0.4s ease; }
+@keyframes fadeSwap { from { opacity: 0.2; } to { opacity: 1; } }
+.btn-ai { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, var(--c-data), var(--c-control)); }
+.btn-ai::before { content: "\2726"; font-size: 14px; }
+.btn-ai:hover:not(:disabled) { filter: brightness(1.08); background: linear-gradient(135deg, var(--c-data), var(--c-control)); }
+
+/* Email: highlights + accordion */
+.email-view { white-space: pre-wrap; font-size: 17px; line-height: 1.75; min-height: 240px; }
+.email-view mark {
+  color: inherit; cursor: pointer; border-radius: 6px; padding: 1px 2px;
+  background: color-mix(in srgb, var(--c, var(--c-new)) 16%, transparent);
+  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--c, var(--c-new)) 60%, transparent);
+  transition: background 0.2s;
+}
+.email-view mark.hl { background: color-mix(in srgb, var(--c, var(--c-new)) 34%, transparent); }
+.found-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.found-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.found-item { cursor: pointer; transition: box-shadow 0.25s, border-color 0.25s, transform 0.25s; }
+.found-item:hover, .found-item.hl { border-color: color-mix(in srgb, var(--c, var(--accent)) 55%, transparent); }
+.found-item.hl { transform: translateX(-4px); }
+.found-item.enter { animation: tileIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.found-head .q { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.found-head .q p { margin: 0; font-size: 19px; line-height: 1.4; }
+.expand { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.45s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.found-item.open .expand { grid-template-rows: 1fr; }
+.expand > div { overflow: hidden; min-height: 0; }
+.found-item .card { padding: 18px 0 0; }
+.found-item .card .tag-row .tag { display: none; }
+.found-item.open .get { display: none; }
+.draft-body { white-space: pre-wrap; font-size: 17px; line-height: 1.6; margin: 0; }
+
+/* Objections tab */
+.obj-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px; }
+.search {
+  flex: 1 1 280px; max-width: 420px; border: 1px solid var(--line); background: var(--card); border-radius: 14px;
+  padding: 12px 16px; font-size: 17px; outline: none; box-shadow: var(--shadow);
+}
+.search:focus { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.obj-bar .chips { flex: 1 1 auto; }
+.chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.obj-list-cta { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.obj-list-cta .btn { text-decoration: none; }
+.obj-panel { padding: 8px 32px; }
+.obj-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 160px 300px; gap: 20px; align-items: center;
+  padding-block: 18px; border-top: 1px solid var(--line);
+}
+.obj-row:first-child { border-top: 0; }
+.obj-row .q { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.obj-row .q p { margin: 0; font-size: 18px; line-height: 1.4; font-weight: 500; }
+.freq { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.freq .bar-track { height: 6px; }
+.obj-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.obj-actions .btn { padding: 9px 16px; font-size: 15px; }
+.btn-added { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--fg); }
+
+/* Practice: stats, leaderboard */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; }
+.stat {
+  background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); border-radius: 22px;
+  padding: 20px 24px; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.stat strong { font-family: var(--font-display); font-size: 32px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat small { color: var(--muted); font-size: 14px; }
+.stat .up { color: var(--good); font-weight: 600; }
+.xp { height: 8px; border-radius: 8px; background: var(--fill); overflow: hidden; }
+.xp div { height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--c-value), var(--c-trust)); transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.practice-split { align-items: stretch; }
+#practice-result { display: flex; flex-direction: column; }
+#practice-result > * { flex: 1; }
+.result { align-content: center; }
+.board-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.board-list li {
+  display: grid; grid-template-columns: 28px 40px minmax(0, 1fr) auto; gap: 14px; align-items: center;
+  padding-block: 12px; border-top: 1px solid var(--line);
+}
+.board-list li:first-child { border-top: 0; }
+.board-list .rank { font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; text-align: center; }
+.board-list li:nth-child(1) .rank { color: var(--c-cost); }
+.board-list .av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; color: #fff; font-size: 14px; background: var(--muted); }
+.board-list .who strong { display: block; font-weight: 600; }
+.board-list .who small { color: var(--muted); font-size: 14px; }
+.board-list .sc { font-family: var(--font-display); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.board-list li.you { background: color-mix(in srgb, var(--c-value) 10%, transparent); border-radius: 14px; border-top-color: transparent; padding-inline: 10px; margin-inline: -10px; }
+.board-list li.you + li { border-top-color: transparent; }
+.chart .bar { fill: color-mix(in srgb, var(--accent) 35%, var(--card)); }
+.chart .bar.now { fill: var(--accent); }
+.chart .val { fill: var(--fg); font-weight: 600; font-size: 13px; }
+
+/* Analytics drag */
+.dash .panel { cursor: grab; }
+.dash .panel:active { cursor: grabbing; }
+
 /* Owner text editing */
 .editing {
   outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px;
@@ -463,12 +614,21 @@ textarea::placeholder { color: var(--muted); }
 }
 
 @media (max-width: 1100px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .me-text { display: none; }
+  .obj-row { grid-template-columns: minmax(0, 1fr) 300px; }
+  .obj-row .freq { display: none; }
   .split { grid-template-columns: 1fr; }
   .paper { position: static; }
   .span-8, .span-4, .span-6 { grid-column: span 12; }
   .dash .donut-wrap { flex-direction: row; align-items: center; }
 }
 @media (max-width: 640px) {
+  .me { display: none; }
+  .obj-row { grid-template-columns: 1fr; }
+  .obj-actions { justify-content: flex-start; }
+  .obj-panel { padding: 4px 20px; }
+  .obj-list-cta { margin-left: 0; }
   main { padding-block: 40px 96px; }
   .view { gap: 28px; }
   h1 { font-size: 36px; }
@@ -502,8 +662,13 @@ textarea::placeholder { color: var(--muted); }
       <a href="#ask">Ask</a>
       <a href="#email">Email</a>
       <a href="#live">Live call</a>
+      <a href="#objections">Objections</a>
       <a href="#practice">Practice</a>
       <a href="#analytics">Analytics</a>
+    </div>
+    <div class="me" id="me">
+      <span class="me-avatar" aria-hidden="true">H</span>
+      <span class="me-text"><strong>Hen</strong><small>Customer Success Manager</small></span>
     </div>
   </div>
 </nav>
@@ -512,6 +677,7 @@ textarea::placeholder { color: var(--muted); }
   <!-- Ask -->
   <section class="view" id="view-ask" data-view="ask">
     <header class="hero">
+      <p class="eyebrow">Hi <b>Hen</b>, let’s tackle some objections.</p>
       <h1>What’s holding your customer back?</h1>
       <p class="sub">Type what they said. Get a clear answer in seconds.</p>
     </header>
@@ -528,7 +694,15 @@ textarea::placeholder { color: var(--muted); }
         <div class="chips" id="ask-chips"></div>
       </div>
     </div>
+    <div class="board-bar">
+      <span class="label">Your answers</span>
+      <div class="mini-seg" id="board-filter" role="group" aria-label="Filter cards">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="star" aria-pressed="false">Starred <span id="star-count">0</span></button>
+      </div>
+    </div>
     <div class="board" id="ask-results" aria-live="polite"></div>
+    <p class="empty" id="board-empty" hidden>No starred cards yet. Tap the star on a card to save it here.</p>
   </section>
 
   <!-- Email -->
@@ -540,12 +714,20 @@ textarea::placeholder { color: var(--muted); }
     <div class="split">
     <div class="paper">
       <textarea id="email-input" aria-label="Customer email" placeholder="Paste the customer's email or call notes"></textarea>
+      <div class="email-view" id="email-view" hidden></div>
       <div class="row">
         <button class="btn btn-primary" id="email-find" type="button">Find objections</button>
+        <button class="btn btn-quiet" id="email-edit" type="button" hidden>Edit email</button>
         <button class="btn btn-link" id="email-clear" type="button">Clear</button>
       </div>
     </div>
-    <div class="found" id="email-results"><p class="empty">Objections will show up here.</p></div>
+    <div class="found-col">
+      <div class="found-bar" id="email-bar" hidden>
+        <span class="label" id="email-count"></span>
+        <button class="btn btn-primary btn-ai" id="email-draft" type="button">Draft a reply</button>
+      </div>
+      <div class="found" id="email-results"><p class="empty">Objections will show up here.</p></div>
+    </div>
     </div>
   </section>
 
@@ -570,13 +752,35 @@ textarea::placeholder { color: var(--muted); }
     </div>
   </section>
 
+  <!-- Objections -->
+  <section class="view" id="view-objections" data-view="objections" hidden>
+    <header class="hero">
+      <h1>Objections.</h1>
+      <p class="sub">Every objection we hear. See the answer, or add it to your practice list.</p>
+    </header>
+    <div class="obj-bar">
+      <input class="search" id="obj-search" type="search" placeholder="Search objections" aria-label="Search objections">
+      <div class="chips" id="obj-cats"></div>
+      <div class="obj-list-cta">
+        <span class="label" id="obj-list-count">Practice list: 0</span>
+        <a class="btn btn-primary" href="#practice" id="obj-practice">Practice my list</a>
+      </div>
+    </div>
+    <div class="panel obj-panel"><div id="obj-rows"></div></div>
+  </section>
+
   <!-- Practice -->
   <section class="view" id="view-practice" data-view="practice" hidden>
     <header class="hero">
       <h1>Practice.</h1>
       <p class="sub">A tough customer. Your answer. A score.</p>
     </header>
-    <div class="split">
+    <div class="stats" id="pr-stats"></div>
+    <div class="mini-seg" id="pr-mode" role="group" aria-label="What to practice">
+      <button type="button" data-m="all" aria-pressed="true">All objections</button>
+      <button type="button" data-m="list" aria-pressed="false">My list <span id="pr-list-n">0</span></button>
+    </div>
+    <div class="split practice-split">
       <div class="stack">
         <div class="customer">
           <div class="persona">
@@ -599,29 +803,40 @@ textarea::placeholder { color: var(--muted); }
       </div>
       <div id="practice-result"></div>
     </div>
+    <div class="split">
+      <div class="panel">
+        <h2>Your monthly progress</h2>
+        <span class="label">Average score per month</span>
+        <div class="chart" id="pr-chart"></div>
+      </div>
+      <div class="panel">
+        <h2 id="lb-title">Team leaderboard</h2>
+        <ol class="board-list" id="pr-board"></ol>
+      </div>
+    </div>
   </section>
 
   <!-- Analytics -->
   <section class="view" id="view-analytics" data-view="analytics" hidden>
     <header class="hero">
       <h1>Analytics.</h1>
-      <p class="sub">What customers push back on, and where it's heading.</p>
+      <p class="sub">What customers push back on, and where it's heading. Drag cards to arrange your dashboard.</p>
     </header>
     <div class="dash">
-      <div class="panel span-8">
+      <div class="panel span-8" data-id="trend">
         <span class="label" id="ins-period">Objections heard</span>
         <div class="headline"><strong id="ins-heard">0</strong><span class="delta" id="ins-delta"></span></div>
         <div class="chart" id="ins-line"></div>
       </div>
-      <div class="panel span-4">
+      <div class="panel span-4" data-id="topics">
         <h2>By topic</h2>
         <div class="donut-wrap" id="ins-donut"></div>
       </div>
-      <div class="panel span-6">
+      <div class="panel span-6" data-id="top">
         <h2>Top objections</h2>
         <div class="bars" id="ins-trending"></div>
       </div>
-      <div class="panel span-6">
+      <div class="panel span-6" data-id="gaps">
         <h2>No answer yet</h2>
         <div class="gaps" id="ins-gaps"></div>
       </div>
