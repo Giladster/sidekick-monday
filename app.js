@@ -135,7 +135,7 @@
   }
 
   // Drag and drop to reorder the children of a grid (mouse and trackpad).
-  function sortable(container, selector, onEnd) {
+  function sortable(container, selector, onEnd, row = false) {
     let drag = null;
     container.addEventListener("dragstart", (e) => {
       const t = e.target.closest(selector);
@@ -151,7 +151,8 @@
       const over = e.target.closest(selector);
       if (!over || over === drag || over.parentElement !== container) return;
       const r = over.getBoundingClientRect();
-      const after = e.clientY > r.bottom - r.height / 3 || (e.clientY > r.top + r.height / 3 && e.clientX > r.left + r.width / 2);
+      const after = row ? e.clientX > r.left + r.width / 2
+        : e.clientY > r.bottom - r.height / 3 || (e.clientY > r.top + r.height / 3 && e.clientX > r.left + r.width / 2);
       if (after ? over.nextElementSibling === drag : over.previousElementSibling === drag) return;
       flip(container, () => (after ? over.after(drag) : over.before(drag)));
     });
@@ -1491,6 +1492,18 @@
 
   // ---------- Start ----------
   route();
+  // Top nav tabs can be dragged into any order. The order is kept in this browser.
+  (function navOrder() {
+    const seg = document.querySelector(".seg");
+    const saved = store.get("sk.nav", []);
+    saved.forEach((h) => { const a = seg.querySelector(`a[href="${h}"]`); if (a) seg.append(a); });
+    seg.querySelectorAll("a").forEach((a) => { a.draggable = true; a.title = "Drag to reorder"; });
+    sortable(seg, "a", () => {
+      store.set("sk.nav", [...seg.querySelectorAll("a")].map((a) => a.getAttribute("href")));
+      seg.classList.remove("sorting");
+    }, true);
+    seg.addEventListener("dragstart", () => seg.classList.add("sorting"));
+  })();
   document.querySelectorAll(".seg, .mini-seg").forEach(pill);
 
   // Top nav hover: a soft highlight glides to the tab under the pointer.

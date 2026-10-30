@@ -795,6 +795,10 @@ textarea::placeholder { color: var(--muted); }
   transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
 }
 .seg.hovering .hover-pill { opacity: 1; }
+.seg a[draggable="true"] { cursor: grab; -webkit-user-drag: element; }
+.seg a.dragging { opacity: 0.35; transform: scale(0.94); }
+.seg.sorting .hover-pill { opacity: 0; }
+.seg.sorting { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 35%, transparent), 0 8px 26px rgba(0, 0, 0, 0.1); }
 .seg.hovering a { opacity: 0.55; transition: opacity 0.25s, color 0.25s; }
 .seg.hovering a:hover, .seg.hovering a[aria-current="page"] { opacity: 1; }
 .seg.hovering a:hover:not([aria-current="page"]) { color: color-mix(in srgb, var(--accent) 80%, var(--c-control)); }
