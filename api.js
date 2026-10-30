@@ -1,8 +1,9 @@
 // CoachAPI: the only place the UI talks to the "engine".
-// Today it runs on mock data. Set API_BASE to the Vercel URL
-// and every call goes to the real backend instead (same shapes).
+// On the deployed site it calls the real backend (/api on Vercel).
+// Opened as a local file, or with ?mock in the URL, it runs on mock data.
+// If a real call fails, that one call falls back to the mock so the demo never breaks.
 (function () {
-  const API_BASE = ""; // e.g. "https://objection-coach.vercel.app"
+  const API_BASE = ""; // same origin when served from Vercel
   const D = window.COACH_DATA;
 
   // Card shape returned everywhere:
@@ -114,5 +115,10 @@
     insights: () => post("/api/insights", {})
   };
 
-  window.CoachAPI = API_BASE ? real : mock;
+  const useReal = location.protocol.startsWith("http") && !/[?&]mock\b/.test(location.search);
+  const withFallback = Object.fromEntries(Object.keys(real).map((k) => [k, (...args) =>
+    real[k](...args).catch((e) => { console.warn("Using mock for " + k, e); return mock[k](...args); })
+  ]));
+
+  window.CoachAPI = useReal ? withFallback : mock;
 })();
