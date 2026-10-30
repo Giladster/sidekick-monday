@@ -1471,17 +1471,47 @@
     const text = h.textContent;
     h.textContent = "";
     h.setAttribute("aria-label", text);
-    [...text].forEach((ch, i) => {
-      const span = el("span", "ch", ch);
-      span.setAttribute("aria-hidden", "true");
-      span.style.animationDelay = 300 + i * 32 + "ms";
-      if (i >= 3 && i <= 5) span.classList.add("hen");
-      h.append(span);
+    // Letters are grouped by word so a line never breaks mid-word.
+    let i = 0;
+    text.split(/(\s+)/).forEach((part) => {
+      if (/^\s+$/.test(part)) { h.append(document.createTextNode(part)); i += part.length; return; }
+      const word = el("span", "word");
+      word.setAttribute("aria-hidden", "true");
+      [...part].forEach((ch) => {
+        const span = el("span", "ch", ch);
+        span.style.animationDelay = 300 + i * 32 + "ms";
+        if (i >= 3 && i <= 5) span.classList.add("hen");
+        word.append(span);
+        i++;
+      });
+      h.append(word);
     });
+    const hand = el("span", "hand", "👋");
+    hand.setAttribute("aria-hidden", "true");
+    h.append(hand);
     if (!reduceMotion) h.classList.add("wave");
   })();
 
   // ---------- Start ----------
   route();
   document.querySelectorAll(".seg, .mini-seg").forEach(pill);
+
+  // Top nav hover: a soft highlight glides to the tab under the pointer.
+  (function navHover() {
+    const seg = document.querySelector(".seg");
+    const hp = el("div", "hover-pill");
+    hp.setAttribute("aria-hidden", "true");
+    seg.prepend(hp);
+    let shown = false;
+    seg.querySelectorAll("a").forEach((a) => a.addEventListener("mouseenter", () => {
+      if (!shown || reduceMotion) hp.style.transition = "opacity 0.2s";
+      hp.style.width = a.offsetWidth + "px";
+      hp.style.transform = `translateX(${a.offsetLeft}px)`;
+      void hp.offsetWidth;
+      hp.style.transition = "";
+      shown = true;
+      seg.classList.add("hovering");
+    }));
+    seg.addEventListener("mouseleave", () => { seg.classList.remove("hovering"); shown = false; });
+  })();
 })();

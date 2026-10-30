@@ -92,6 +92,11 @@ button, input, textarea { font: inherit; color: inherit; }
 .me-text strong { font-size: 15px; }
 .me-text small { font-size: 12px; color: var(--muted); }
 .eyebrow { font-size: 19px; font-weight: 600; color: var(--muted-strong); margin: 0 0 4px; }
+#hello { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; color: var(--fg); margin-bottom: 10px; }
+#hello .hand { display: inline-block; margin-left: 10px; transform-origin: 70% 75%; }
+#hello.wave .hand { animation: handWave 1.6s 1.6s ease-in-out both; }
+@keyframes handWave { 0%, 100% { transform: rotate(0); } 15%, 45% { transform: rotate(16deg); } 30%, 60% { transform: rotate(-8deg); } 75% { transform: rotate(6deg); } }
+@media (max-width: 640px) { #hello { font-size: 23px; } }
 .eyebrow b { background: linear-gradient(90deg, var(--c-data), var(--c-control)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .brand { font-weight: 600; font-size: 19px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 10px; }
 .brand-mark {
@@ -499,7 +504,7 @@ textarea::placeholder { color: var(--muted); }
 }
 .ai-btn:hover { background: color-mix(in srgb, var(--c-control) 10%, transparent); }
 .ai-btn svg { width: 16px; height: 16px; }
-.rewrite { display: flex; gap: 8px; background: var(--fill); border-radius: 16px; padding: 6px 6px 6px 16px; }
+.rewrite { display: flex; gap: 8px; background: var(--fill); border: 1px solid transparent; border-radius: 16px; padding: 6px 6px 6px 16px; }
 .rewrite input { flex: 1; min-width: 0; border: 0; background: none; outline: none; font-size: 16px; }
 .rewrite .btn { padding: 9px 16px; font-size: 15px; }
 .tailoring { font-size: 14px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
@@ -600,14 +605,13 @@ textarea::placeholder { color: var(--muted); }
 
 /* Greeting wave */
 .eyebrow .ch { display: inline-block; white-space: pre; }
-.eyebrow.wave .ch { animation: wave 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+.eyebrow.wave .ch { animation: wave 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) backwards; }
+.eyebrow .word { display: inline-block; white-space: nowrap; }
 @keyframes wave {
-  0% { transform: none; color: inherit; }
   35% { transform: translateY(-7px); color: var(--accent); }
   70% { transform: translateY(1px); }
-  100% { transform: none; color: inherit; }
 }
-.eyebrow .hen { color: var(--accent); }
+.eyebrow .hen { background: linear-gradient(90deg, var(--c-data), var(--c-control)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
 /* Hover labels on icon buttons */
 .icon-btn[data-tip]:not(.close) { position: relative; }
@@ -767,6 +771,33 @@ textarea::placeholder { color: var(--muted); }
 .seg.has-pill a[aria-current="page"], .mini-seg.has-pill button[aria-pressed="true"] { background: none; box-shadow: none; }
 .seg a, .mini-seg button { transition: color 0.25s, font-weight 0.25s; }
 .obj-row.appear { animation-duration: 0.32s; }
+/* Input fields: lift on hover, glow on focus */
+.ask, .paper, .reply, .search, .rewrite {
+  transition: border-color 0.25s, box-shadow 0.3s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.ask:hover, .paper:hover, .reply:hover, .search:hover, .rewrite:hover {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  box-shadow: var(--shadow), 0 8px 28px rgba(0, 0, 0, 0.06);
+}
+.ask:focus-within, .paper:focus-within, .reply:focus-within, .search:focus, .rewrite:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: var(--shadow), 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent), 0 10px 32px rgba(0, 0, 0, 0.07);
+}
+.ask:focus-within, .reply:focus-within, .search:focus { transform: translateY(-1px); }
+.ask input:focus-visible, .paper textarea:focus-visible, .rewrite input:focus-visible { outline: none; }
+
+
+/* Top nav focus: the bar lifts, a soft light follows the pointer, other tabs dim */
+.seg { transition: box-shadow 0.3s, transform 0.3s; }
+.seg:hover { box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08), 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent); transform: translateY(-1px); }
+.seg .hover-pill {
+  position: absolute; z-index: -2; top: 3px; left: 0; height: calc(100% - 6px); border-radius: 9px;
+  background: color-mix(in srgb, var(--fg) 7%, transparent); opacity: 0; pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s;
+}
+.seg.hovering .hover-pill { opacity: 1; }
+.seg.hovering a { opacity: 0.55; transition: opacity 0.25s, color 0.25s; }
+.seg.hovering a:hover, .seg.hovering a[aria-current="page"] { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
