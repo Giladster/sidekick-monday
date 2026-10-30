@@ -1486,9 +1486,6 @@
       });
       h.append(word);
     });
-    const hand = el("span", "hand", "👋");
-    hand.setAttribute("aria-hidden", "true");
-    h.append(hand);
     if (!reduceMotion) h.classList.add("wave");
   })();
 
