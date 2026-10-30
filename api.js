@@ -68,7 +68,7 @@
     // Practice: a random objection from the collected pool.
     async practiceNext(exclude) {
       await wait(250);
-      const pool = D.practicePool.filter((q) => q !== exclude);
+      const pool = D.objections.map((o) => o.text).filter((q) => q !== exclude);
       return { objection: pool[Math.floor(Math.random() * pool.length)] };
     },
 
@@ -92,6 +92,27 @@
       };
     },
 
+    // Rewrite an answer the way the CSM asks.
+    async rewrite(quote, answer, request) {
+      await wait(800);
+      const e = bestMatch(quote) || D.fallback;
+      return { answer: e.answer + " " + e.next };
+    },
+
+    // Draft one reply email covering every objection, one part per objection.
+    async draft(email, objections) {
+      await wait(900);
+      const lines = email.trim().split(/\n/).map((l) => l.trim()).filter(Boolean);
+      const last = lines[lines.length - 1] || "";
+      const name = /^[A-Z][a-z]+$/.test(last) ? last : "there";
+      return {
+        subject: "Re: your questions about monday AI",
+        greeting: "Hi " + name + ",\n\nThanks for the honest questions. Here are quick answers.",
+        parts: objections.map((q, i) => ({ objection: i, text: (bestMatch(q) || D.fallback).answer })),
+        closing: "Would a small 2-week pilot with 2 to 5 people and a credit cap work as a next step? Happy to set it up together.\n\nBest,\nHen"
+      };
+    },
+
     // Most common objections right now (from analytics), for the Ask chips.
     async common() {
       await wait(150);
@@ -111,6 +132,8 @@
     detect: (line) => post("/api/detect", { line }),
     practiceNext: (exclude) => post("/api/practice/next", { exclude }),
     scorePractice: (objection, reply) => post("/api/practice/score", { objection, reply }),
+    rewrite: (quote, answer, request) => post("/api/rewrite", { quote, answer, request }),
+    draft: (email, objections) => post("/api/draft", { email, objections }),
     common: () => post("/api/common", {}),
     insights: () => post("/api/insights", {})
   };
@@ -120,5 +143,9 @@
     real[k](...args).catch((e) => { console.warn("Using mock for " + k, e); return mock[k](...args); })
   ]));
 
-  window.CoachAPI = useReal ? withFallback : mock;
+  // Instant, free answer from the approved library (no AI call). Used for chips
+  // and to show a card right away while the AI writes its tailored version.
+  const match = (text) => toCard(bestMatch(text) || D.fallback, text);
+
+  window.CoachAPI = { ...(useReal ? withFallback : mock), match, live: useReal };
 })();

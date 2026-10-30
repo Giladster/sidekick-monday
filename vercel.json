@@ -1,5 +1,5 @@
 {
   "functions": {
-    "api/**/*.js": { "includeFiles": "data.js", "maxDuration": 30 }
+    "api/**/*.js": { "includeFiles": "data.js", "maxDuration": 60 }
   }
 }
