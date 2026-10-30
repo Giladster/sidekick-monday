@@ -99,16 +99,17 @@
       return { answer: e.answer + " " + e.next };
     },
 
-    // Draft one reply email covering every objection.
+    // Draft one reply email covering every objection, one part per objection.
     async draft(email, objections) {
       await wait(900);
-      const name = (email.match(/^\s*(?:Hi|Hello|Hey)?\s*[\s\S]*?\n\s*([A-Z][a-z]+)\s*$/) || [])[1] || "there";
-      const parts = objections.map((q) => (bestMatch(q) || D.fallback).answer);
+      const lines = email.trim().split(/\n/).map((l) => l.trim()).filter(Boolean);
+      const last = lines[lines.length - 1] || "";
+      const name = /^[A-Z][a-z]+$/.test(last) ? last : "there";
       return {
         subject: "Re: your questions about monday AI",
-        body: "Hi " + name + ",\n\nThanks for the honest questions. Here are quick answers.\n\n" +
-          parts.map((p) => "\u2022 " + p).join("\n\n") +
-          "\n\nWould a small 2-week pilot with 2 to 5 people and a credit cap work as a next step? Happy to set it up together.\n\nBest,\nHen"
+        greeting: "Hi " + name + ",\n\nThanks for the honest questions. Here are quick answers.",
+        parts: objections.map((q, i) => ({ objection: i, text: (bestMatch(q) || D.fallback).answer })),
+        closing: "Would a small 2-week pilot with 2 to 5 people and a credit cap work as a next step? Happy to set it up together.\n\nBest,\nHen"
       };
     },
 

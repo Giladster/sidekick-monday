@@ -598,6 +598,99 @@ textarea::placeholder { color: var(--muted); }
 .dash .panel { cursor: grab; }
 .dash .panel:active { cursor: grabbing; }
 
+/* Greeting wave */
+.eyebrow .ch { display: inline-block; white-space: pre; }
+.eyebrow.wave .ch { animation: wave 0.9s cubic-bezier(0.3, 0.7, 0.3, 1) both; }
+@keyframes wave {
+  0% { transform: none; color: inherit; }
+  35% { transform: translateY(-7px); color: var(--accent); }
+  70% { transform: translateY(1px); }
+  100% { transform: none; color: inherit; }
+}
+.eyebrow .hen { color: var(--accent); }
+
+/* Hover labels on icon buttons */
+.icon-btn[data-tip]:not(.close) { position: relative; }
+.icon-btn[data-tip]::after {
+  content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 8px);
+  transform: translate(-50%, 4px); opacity: 0; pointer-events: none; white-space: nowrap;
+  background: var(--fg); color: var(--bg); font-size: 12px; font-weight: 600; padding: 5px 9px; border-radius: 8px;
+  transition: opacity 0.15s 0.25s, transform 0.15s 0.25s; z-index: 5;
+}
+.icon-btn[data-tip]:hover::after, .icon-btn[data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+.close[data-tip]::after { bottom: auto; top: calc(100% + 8px); }
+
+/* Source link: quiet */
+.sources { align-items: center; }
+.sources .src-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+.sources a { font-size: 14px; }
+
+/* Email draft */
+.draft { display: flex; flex-direction: column; gap: 16px; }
+.card.draft { gap: 14px; }
+.card.draft.enter { animation: tileIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.obj-row .btn-added { color: var(--muted-strong); }
+.draft-text { margin: 0; white-space: pre-wrap; font-size: 17px; line-height: 1.6; }
+.part {
+  position: relative; border-radius: 14px; padding: 12px 48px 12px 14px; margin-inline: -14px -4px;
+  background: color-mix(in srgb, var(--c, var(--accent)) 9%, transparent);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.part:hover, .part.hl { background: color-mix(in srgb, var(--c, var(--accent)) 18%, transparent); box-shadow: inset 3px 0 0 var(--c, var(--accent)); }
+.part .part-link {
+  display: block; font-size: 13px; font-weight: 600; color: var(--muted-strong);
+  max-height: 0; opacity: 0; overflow: hidden; transition: max-height 0.25s, opacity 0.25s, margin 0.25s;
+}
+.part:hover .part-link, .part.hl .part-link { max-height: 3em; opacity: 1; margin-bottom: 6px; }
+.part > .icon-btn[data-tip] { position: absolute; top: 10px; right: 8px; background: var(--card); }
+.draft-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Practice list drawer */
+.drawer {
+  position: fixed; z-index: 25; top: 0; right: 0; bottom: 0; width: min(440px, 100vw);
+  background: var(--card); border-left: 1px solid var(--line);
+  box-shadow: -20px 0 60px rgba(0, 0, 0, 0.12);
+  padding: calc(28px + env(safe-area-inset-top, 0px)) max(28px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 28px;
+  display: flex; flex-direction: column; gap: 18px;
+  transform: translateX(105%); transition: transform 0.45s cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+.drawer.show { transform: none; }
+.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.drawer-head h2 { margin: 0 0 4px; font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+.dr-list { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.dr-list li {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+  background: var(--fill); border-radius: 16px; padding: 14px 10px 14px 14px; font-size: 16px; font-weight: 500;
+}
+.dr-list li.new { animation: tileIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.dr-list .tick {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center;
+  font-size: 13px; font-weight: 700; color: #fff;
+}
+.dr-list li.done .tick { background: var(--good); border-color: var(--good); }
+.dr-list li.done span.t { color: var(--muted); }
+.dr-list .icon-btn { background: var(--card); }
+.drawer-foot { display: flex; flex-direction: column; gap: 10px; }
+.drawer-foot .btn { width: 100%; text-align: center; text-decoration: none; }
+.drawer-foot .note-done { margin: 0; font-weight: 600; display: flex; gap: 8px; align-items: center; }
+.pr-tools { display: flex; gap: 10px; margin-top: -24px; }
+#pr-mode { margin-bottom: 0; }
+.banner {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  background: color-mix(in srgb, var(--good) 12%, var(--card)); border: 1px solid color-mix(in srgb, var(--good) 35%, transparent);
+  border-radius: 22px; padding: 18px 22px; animation: tileIn 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.banner > div { flex: 1; min-width: 200px; display: flex; flex-direction: column; }
+.banner strong { font-size: 18px; }
+.banner span:not(.banner-icon) { color: var(--muted-strong); }
+.banner-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--good); color: #fff; display: grid; place-items: center; font-weight: 700; }
+
+/* Objections list: calm, one color */
+.obj-row .tag { --c: var(--muted); background: var(--fill); }
+.obj-row .tag::before { display: none; }
+.obj-row .bar-fill { background: var(--accent); }
+#obj-cats .chip::before { display: none; }
+
 /* Owner text editing */
 .editing {
   outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px;
@@ -668,7 +761,7 @@ textarea::placeholder { color: var(--muted); }
     </div>
     <div class="me" id="me">
       <span class="me-avatar" aria-hidden="true">H</span>
-      <span class="me-text"><strong>Hen</strong><small>Customer Success Manager</small></span>
+      <span class="me-text"><strong>Hen</strong><small>Enablement team</small></span>
     </div>
   </div>
 </nav>
@@ -677,7 +770,7 @@ textarea::placeholder { color: var(--muted); }
   <!-- Ask -->
   <section class="view" id="view-ask" data-view="ask">
     <header class="hero">
-      <p class="eyebrow">Hi <b>Hen</b>, let’s tackle some objections.</p>
+      <p class="eyebrow" id="hello">Hi Hen, let’s tackle some objections.</p>
       <h1>What’s holding your customer back?</h1>
       <p class="sub">Type what they said. Get a clear answer in seconds.</p>
     </header>
@@ -723,10 +816,14 @@ textarea::placeholder { color: var(--muted); }
     </div>
     <div class="found-col">
       <div class="found-bar" id="email-bar" hidden>
-        <span class="label" id="email-count"></span>
+        <div class="mini-seg" id="email-tabs" role="group" aria-label="Show">
+          <button type="button" data-t="list" aria-pressed="true" id="email-count">Objections</button>
+          <button type="button" data-t="draft" aria-pressed="false" id="email-draft-tab" hidden>Draft reply</button>
+        </div>
         <button class="btn btn-primary btn-ai" id="email-draft" type="button">Draft a reply</button>
       </div>
       <div class="found" id="email-results"><p class="empty">Objections will show up here.</p></div>
+      <div id="email-draft-view" hidden></div>
     </div>
     </div>
   </section>
@@ -762,7 +859,7 @@ textarea::placeholder { color: var(--muted); }
       <input class="search" id="obj-search" type="search" placeholder="Search objections" aria-label="Search objections">
       <div class="chips" id="obj-cats"></div>
       <div class="obj-list-cta">
-        <span class="label" id="obj-list-count">Practice list: 0</span>
+        <button class="btn btn-quiet" id="obj-list-count" type="button">Practice list: 0</button>
         <a class="btn btn-primary" href="#practice" id="obj-practice">Practice my list</a>
       </div>
     </div>
@@ -779,6 +876,14 @@ textarea::placeholder { color: var(--muted); }
     <div class="mini-seg" id="pr-mode" role="group" aria-label="What to practice">
       <button type="button" data-m="all" aria-pressed="true">All objections</button>
       <button type="button" data-m="list" aria-pressed="false">My list <span id="pr-list-n">0</span></button>
+    </div>
+    <div class="pr-tools">
+      <button class="btn btn-quiet" id="pr-view-list" type="button">View my list</button>
+    </div>
+    <div class="banner" id="pr-done" hidden>
+      <span class="banner-icon" aria-hidden="true">&#10003;</span>
+      <div><strong>You practiced your whole list.</strong><span>Now you're practicing from the full library.</span></div>
+      <button class="btn btn-primary" id="pr-again" type="button">Practice the list again</button>
     </div>
     <div class="split practice-split">
       <div class="stack">
@@ -844,6 +949,17 @@ textarea::placeholder { color: var(--muted); }
     <p class="note">Sample data</p>
   </section>
 </main>
+
+<aside class="drawer" id="drawer" aria-label="My practice list" hidden>
+  <div class="drawer-head">
+    <div><h2>My practice list</h2><span class="label" id="dr-progress"></span></div>
+    <button class="icon-btn" id="dr-close" type="button" aria-label="Close" data-tip="Close"><svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  </div>
+  <div class="xp"><div id="dr-bar"></div></div>
+  <ul class="dr-list" id="dr-list"></ul>
+  <p class="empty" id="dr-empty">Your list is empty. Add objections with “+ Practice”.</p>
+  <div class="drawer-foot" id="dr-foot"></div>
+</aside>
 
 <div class="toast" id="toast" role="status" hidden></div>
 

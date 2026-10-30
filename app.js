@@ -47,7 +47,8 @@
     x: '<svg viewBox="0 0 16 16" fill="none"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
     trash: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6.5 4V2.8h3V4M4 4l.7 9.2h6.6L12 4M6.7 6.8v4M9.3 6.8v4"/></svg>',
     star: '<svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="currentColor"/></svg>',
-    pin: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9.8 2.2l4 4-2.1.7-2.4 2.4.3 3.1-1 1-2.6-2.6L3 14M5.4 7.9l1-1 3.1.3 2.4-2.4"/></svg>',
+    pin: '<svg viewBox="0 0 16 16"><path d="M10.4 1.3l4.3 4.3-1.5.6-2.6 2.6.3 3.5-1.4 1.4-2.9-2.9-4.3 4.3-.9-.9 4.3-4.3-2.9-2.9 1.4-1.4 3.5.3 2.6-2.6z" fill="currentColor"/></svg>',
+    copy: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="2"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg>',
     spark: '<svg viewBox="0 0 16 16"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5zM13 11l.6 1.4L15 13l-1.4.6L13 15l-.6-1.4L11 13l1.4-.6z" fill="currentColor"/></svg>'
   };
 
@@ -55,7 +56,7 @@
     const b = el("button", "icon-btn" + (cls ? " " + cls : ""));
     b.type = "button";
     b.setAttribute("aria-label", label);
-    b.title = label;
+    b.dataset.tip = label;
     b.innerHTML = ICONS[icon];
     return b;
   }
@@ -141,10 +142,13 @@
       sheetOpen = null;
       document.removeEventListener("keydown", onKey);
       backdrop.classList.remove("show");
+      // closeTo() lets the caller make the element the sheet should shrink into
+      // (a new card in the grid), so closing shows where the answer went.
+      if (opts.closeTo) fromEl = opts.closeTo();
       const done = () => {
         sheet.remove(); backdrop.remove();
         if (opts.hideSource && fromEl) fromEl.style.visibility = "";
-        opts.onClose && opts.onClose();
+        opts.onClose && opts.onClose(fromEl);
       };
       if (reduceMotion || instant) return done();
       const back = fromEl && fromEl.isConnected ? fromEl.getBoundingClientRect() : null;
@@ -235,11 +239,13 @@
     });
 
     const next = el("div", "next");
-    next.append(el("span", "label", "Next step"), el("p", null, c.next));
+    const nextP = el("p", null, c.next);
+    next.append(el("span", "label", "Next step"), nextP);
     card.append(next);
 
     if (c.sources && c.sources.length) {
       const s = el("div", "sources");
+      s.append(el("span", "src-label", "Source"));
       c.sources.forEach((src) => {
         const a = el("a", null, src.title + " ↗");
         a.href = src.url; a.target = "_blank"; a.rel = "noopener";
@@ -253,10 +259,15 @@
       status.lastChild.textContent = "Tailoring the answer to their words…";
       status.hidden = !on;
     };
-    card.setAnswer = (text) => {
+    card.setAnswer = (text, nextText) => {
       c.answer = text;
       answer.textContent = text;
       answer.classList.remove("fade-swap"); void answer.offsetWidth; answer.classList.add("fade-swap");
+      if (nextText) {
+        c.next = nextText;
+        nextP.textContent = nextText;
+        nextP.classList.remove("fade-swap"); void nextP.offsetWidth; nextP.classList.add("fade-swap");
+      }
     };
     return card;
   }
@@ -310,7 +321,7 @@
 
     const top = el("div", "tile-top");
     top.append(tag(item.card.category));
-    const star = iconButton(item.star ? "Unstar" : "Star", "star", "act" + (item.star ? " on" : ""));
+    const star = iconButton(item.star ? "Remove star" : "Star", "star", "act" + (item.star ? " on" : ""));
     star.dataset.a = "star";
     const pin = iconButton(item.pin ? "Unpin" : "Pin to top", "pin", "act" + (item.pin ? " on" : ""));
     pin.dataset.a = "pin";
@@ -386,7 +397,9 @@
     if (item.tailoring) cardEl.setTailoring(true);
   }
 
-  function ask(text, typed) {
+  // Asking opens the answer right away. Closing it makes room in the grid,
+  // shrinks into the new spot, and the card settles in with a small bounce.
+  function ask(text, typed, sourceEl) {
     text = text.trim();
     if (!text) return;
     const host = $("ask-results");
@@ -398,19 +411,34 @@
       const lastPinned = board.filter((i) => i.pin).pop();
       board.splice(lastPinned ? board.indexOf(lastPinned) + 1 : 0, 0, item);
       saveBoard();
-      const t = renderTile(item, true);
-      const firstFree = [...host.children].find((n) => !n.classList.contains("pinned"));
-      flip(host, () => (firstFree ? firstFree.before(t) : host.append(t)));
       updateFilterCount();
       updateEmpty();
-      // Show the answer right away; closing it settles the card into the grid.
-      setTimeout(() => openItem(t, item), reduceMotion ? 0 : 140);
+      const cardEl = renderCard(card, { onChange: saveBoard });
+      openCard = { item, cardEl };
+      openSheet(sourceEl || $("ask-form"), cardEl, {
+        closeTo: () => {
+          const t = renderTile(item);
+          t.style.visibility = "hidden";
+          const firstFree = [...host.children].find((n) => !n.classList.contains("pinned"));
+          flip(host, () => (firstFree ? firstFree.before(t) : host.append(t)));
+          return t;
+        },
+        onClose: (t) => {
+          openCard = null;
+          t.style.visibility = "";
+          if (!reduceMotion) {
+            t.classList.add("enter");
+            t.addEventListener("animationend", () => t.classList.remove("enter"), { once: true });
+          }
+        }
+      });
+      if (item.tailoring) cardEl.setTailoring(true);
     }, (ai) => {
       item.tailoring = false;
-      if (ai && ai.answer) { item.card = { ...item.card, answer: ai.answer }; saveBoard(); }
+      if (ai && ai.answer) { item.card = { ...item.card, answer: ai.answer, next: ai.next || item.card.next }; saveBoard(); }
       if (openCard && openCard.item === item) {
         openCard.cardEl.setTailoring(false);
-        if (ai && ai.answer) openCard.cardEl.setAnswer(ai.answer);
+        if (ai && ai.answer) openCard.cardEl.setAnswer(ai.answer, ai.next);
       }
     });
   }
@@ -438,7 +466,7 @@
   $("ask-form").addEventListener("submit", (e) => {
     e.preventDefault();
     const input = $("ask-input");
-    ask(input.value, true);
+    ask(input.value, true, $("ask-form"));
     input.value = "";
   });
 
@@ -449,7 +477,7 @@
       const b = el("button", "chip", c.text);
       b.type = "button";
       b.dataset.cat = c.category;
-      b.addEventListener("click", () => ask(b.textContent, false));
+      b.addEventListener("click", () => ask(b.textContent, false, b));
       $("ask-chips").append(b);
     });
     return list;
@@ -529,7 +557,7 @@
         if (api.live) item.cardEl.setTailoring(true);
       }, (ai) => {
         item.cardEl.setTailoring(false);
-        if (ai && ai.answer) item.cardEl.setAnswer(ai.answer);
+        if (ai && ai.answer) item.cardEl.setAnswer(ai.answer, ai.next);
       });
     }
   }
@@ -583,6 +611,9 @@
         return;
       }
       $("email-count").textContent = emailItems.length + (emailItems.length === 1 ? " objection" : " objections");
+      $("email-draft-tab").hidden = true;
+      $("email-draft-view").innerHTML = "";
+      setEmailTab("list");
       $("email-bar").hidden = false;
       emailItems.forEach((it, i) => out.append(foundItem(it, i)));
       renderEmailView(text, emailItems);
@@ -595,6 +626,56 @@
     }
   }
 
+  // Draft reply: shown inline. Each answer part is tinted by its objection,
+  // hover shows which objection it answers, and each part can be copied.
+  const copyText = (t) => navigator.clipboard.writeText(t)
+    .then(() => toast("Copied"), () => toast("Copy isn't allowed here. Select the text instead."));
+
+  function setEmailTab(t) {
+    $("email-tabs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === t)));
+    $("email-results").hidden = t !== "list";
+    $("email-draft-view").hidden = t !== "draft";
+  }
+  $("email-tabs").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (b) setEmailTab(b.dataset.t);
+  });
+
+  function renderDraft(r) {
+    const host = $("email-draft-view");
+    host.innerHTML = "";
+    const card = el("article", "card draft enter");
+    const top = el("div", "card-top");
+    top.append(el("span", "label", "Draft reply"));
+    card.append(top, el("h3", "worry", r.subject), el("p", "draft-text", r.greeting));
+    const parts = r.parts || [];
+    parts.forEach((pt) => {
+      const item = emailItems[pt.objection];
+      const box = el("div", "part");
+      if (item) {
+        box.dataset.cat = item.card.category;
+        box.append(el("span", "part-link", "Answers: “" + item.quote + "”"));
+        box.addEventListener("mouseenter", () => highlight(item, true));
+        box.addEventListener("mouseleave", () => highlight(item, false));
+      }
+      box.append(el("p", "draft-text", pt.text));
+      const copy = iconButton("Copy this answer", "copy");
+      copy.addEventListener("click", () => copyText(pt.text));
+      box.append(copy);
+      card.append(box);
+    });
+    card.append(el("p", "draft-text", r.closing));
+    const acts = el("div", "draft-actions");
+    const all = el("button", "btn btn-primary", "Copy the whole email");
+    all.type = "button";
+    const full = [r.greeting, ...parts.map((p) => p.text), r.closing].join("\n\n");
+    all.addEventListener("click", () => copyText("Subject: " + r.subject + "\n\n" + full));
+    acts.append(all);
+    card.append(acts);
+    card.addEventListener("animationend", () => card.classList.remove("enter"), { once: true });
+    host.append(card);
+  }
+
   async function draftReply() {
     const btn = $("email-draft");
     btn.disabled = true;
@@ -602,17 +683,9 @@
     btn.textContent = "Drafting…";
     try {
       const r = await api.draft($("email-input").value, emailItems.map((i) => i.quote));
-      const card = el("article", "card");
-      const top = el("div", "card-top");
-      top.append(el("span", "label", "Draft reply"));
-      const copy = el("button", "copy", "Copy");
-      copy.type = "button";
-      copy.style.marginRight = "44px";
-      copy.addEventListener("click", () => navigator.clipboard.writeText("Subject: " + r.subject + "\n\n" + r.body)
-        .then(() => toast("Copied"), () => toast("Copy isn't allowed here. Select the text instead.")));
-      top.append(copy);
-      card.append(top, el("h3", "worry", r.subject), el("p", "draft-body", r.body));
-      openSheet(btn, card);
+      renderDraft(r);
+      $("email-draft-tab").hidden = false;
+      setEmailTab("draft");
     } catch (e) {
       toast("Couldn't draft the reply. Try again.");
     } finally {
@@ -629,6 +702,8 @@
     setEmailMode(false);
     emailItems = [];
     $("email-bar").hidden = true;
+    $("email-draft-view").innerHTML = "";
+    setEmailTab("list");
     $("email-results").innerHTML = '<p class="empty">Objections will show up here.</p>';
     $("email-input").focus();
   });
@@ -743,7 +818,6 @@
   ["All", ...CATS].forEach((c) => {
     const b = el("button", "chip", c);
     b.type = "button";
-    if (c !== "All") b.dataset.cat = c;
     b.setAttribute("aria-pressed", String(c === objCat));
     b.addEventListener("click", () => {
       objCat = c;
@@ -755,6 +829,92 @@
   $("obj-search").addEventListener("input", () => renderObjections());
   let pendingList = false;
   $("obj-practice").addEventListener("click", () => { pendingList = true; });
+  $("obj-list-count").addEventListener("click", () => openDrawer());
+
+  // ---------- Practice list side panel ----------
+  let listDone = store.get("sk.listDone", []);
+  const saveDone = () => store.set("sk.listDone", listDone);
+  const listLeft = () => practiceList.filter((t) => !listDone.includes(t));
+
+  function renderDrawer(fresh) {
+    const ul = $("dr-list");
+    const done = practiceList.filter((t) => listDone.includes(t)).length;
+    const total = practiceList.length;
+    $("dr-progress").textContent = total ? done + " of " + total + " practiced" : "";
+    $("dr-bar").style.width = (total ? (done / total) * 100 : 0) + "%";
+    $("dr-bar").parentElement.hidden = !total;
+    $("dr-empty").hidden = !!total;
+    ul.innerHTML = "";
+    practiceList.forEach((t) => {
+      const li = el("li", listDone.includes(t) ? "done" : null);
+      if (t === fresh && !reduceMotion) li.classList.add("new");
+      li.append(el("span", "tick", listDone.includes(t) ? "✓" : ""), el("span", "t", t));
+      const rm = iconButton("Remove", "trash");
+      rm.addEventListener("click", () => {
+        practiceList = practiceList.filter((x) => x !== t);
+        listDone = listDone.filter((x) => x !== t);
+        saveList(); saveDone();
+        renderObjections();
+        renderDrawer();
+      });
+      li.append(rm);
+      ul.append(li);
+    });
+    const foot = $("dr-foot");
+    foot.innerHTML = "";
+    if (!total) return;
+    const go = (label, cls, fn) => {
+      const b = el("button", "btn " + cls, label);
+      b.type = "button";
+      b.addEventListener("click", fn);
+      foot.append(b);
+    };
+    if (done === total) {
+      const n = el("p", "note-done");
+      n.append(el("span", "banner-icon", "✓"), document.createTextNode("All done. Nice work!"));
+      foot.append(n);
+      go("Practice the list again", "btn-primary", () => { resetList(); startList(); });
+      go("Practice all objections", "btn-quiet", () => { closeDrawer(); location.hash = "#practice"; setPracticeMode("all"); });
+    } else {
+      go("Practice this list", "btn-primary", startList);
+    }
+  }
+
+  function startList() {
+    closeDrawer();
+    if (location.hash === "#practice") setPracticeMode("list", true);
+    else { pendingList = true; location.hash = "#practice"; }
+  }
+
+  function resetList() {
+    listDone = [];
+    saveDone();
+    $("pr-done").hidden = true;
+    renderDrawer();
+  }
+
+  function openDrawer(fresh) {
+    const d = $("drawer");
+    renderDrawer(fresh);
+    if (d.classList.contains("show")) return;
+    d.hidden = false;
+    d.offsetWidth; // let the panel start off screen, then slide in
+    d.classList.add("show");
+  }
+  function closeDrawer() {
+    const d = $("drawer");
+    if (!d.classList.contains("show")) return;
+    d.classList.remove("show");
+    if (reduceMotion) d.hidden = true;
+    else d.addEventListener("transitionend", () => { if (!d.classList.contains("show")) d.hidden = true; }, { once: true });
+  }
+  $("dr-close").addEventListener("click", closeDrawer);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+  document.addEventListener("click", (e) => {
+    if (!$("drawer").classList.contains("show") || sheetOpen || !e.target.isConnected) return;
+    if (e.target.closest("#drawer, .obj-actions, #obj-list-count, #pr-view-list")) return;
+    closeDrawer();
+  });
 
   function renderObjections() {
     const q = $("obj-search").value.trim().toLowerCase();
@@ -773,7 +933,6 @@
       const freq = el("div", "freq");
       const track = el("div", "bar-track");
       const fill = el("div", "bar-fill");
-      fill.dataset.cat = o.category;
       fill.style.width = (o.count / max) * 100 + "%";
       track.append(fill);
       freq.append(el("span", null, "Heard " + o.count + " times"), track);
@@ -785,14 +944,22 @@
       add.type = "button";
       const paint = () => {
         const on = practiceList.includes(o.text);
-        add.className = "btn " + (on ? "btn-added" : "btn-quiet");
-        add.textContent = on ? "✓ In practice list" : "+ Practice";
+        add.className = "btn btn-quiet" + (on ? " btn-added" : "");
+        add.textContent = on ? "✓ In my list" : "+ Practice";
       };
       paint();
       add.addEventListener("click", () => {
-        practiceList = practiceList.includes(o.text) ? practiceList.filter((t) => t !== o.text) : [...practiceList, o.text];
+        if (practiceList.includes(o.text)) {
+          practiceList = practiceList.filter((t) => t !== o.text);
+          saveList();
+          paint();
+          renderDrawer();
+          return;
+        }
+        practiceList = [...practiceList, o.text];
         saveList();
         paint();
+        openDrawer(o.text);
       });
       acts.append(see, add);
       row.append(qd, freq, acts);
@@ -925,6 +1092,10 @@
       toast("Your practice list is empty. Add objections from the Objections tab.");
       m = "all";
     }
+    if (m === "list") {
+      if (!listLeft().length) resetList();
+      $("pr-done").hidden = true;
+    }
     const changed = m !== practiceMode;
     practiceMode = m;
     $("pr-mode").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === m)));
@@ -939,7 +1110,8 @@
     const current = $("practice-q").dataset.raw || "";
     let objection;
     if (practiceMode === "list" && practiceList.length) {
-      const pool = practiceList.length > 1 ? practiceList.filter((t) => t !== current) : practiceList;
+      const left = listLeft();
+      const pool = left.length > 1 ? left.filter((t) => t !== current) : left.length ? left : practiceList;
       objection = pool[Math.floor(Math.random() * pool.length)];
     } else {
       objection = (await api.practiceNext(current)).objection;
@@ -1016,6 +1188,7 @@
       out.append(box);
       attempts.push({ t: new Date().toISOString(), score: r.score });
       store.set("sk.attempts", attempts);
+      markPracticed($("practice-q").dataset.raw);
       const before = Math.floor((practiceStats().xp - r.score * 10) / XP_LEVEL);
       renderPracticeStats();
       renderMonthly();
@@ -1031,6 +1204,21 @@
       $("practice-submit").disabled = false;
     }
   }
+  // A list item counts as practiced once it's scored. When the whole list is done,
+  // say so and move on to the full library.
+  function markPracticed(text) {
+    if (practiceMode !== "list" || !practiceList.includes(text) || listDone.includes(text)) return;
+    listDone.push(text);
+    saveDone();
+    renderDrawer();
+    if (!listLeft().length) {
+      $("pr-done").hidden = false;
+      practiceMode = "all";
+      $("pr-mode").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === "all")));
+    }
+  }
+  $("pr-again").addEventListener("click", () => { resetList(); setPracticeMode("list", true); });
+  $("pr-view-list").addEventListener("click", () => openDrawer());
   $("practice-submit").addEventListener("click", submitPractice);
   $("practice-skip").addEventListener("click", nextPractice);
 
@@ -1191,6 +1379,22 @@
       gaps.append(row);
     });
   }
+
+  // ---------- Greeting: a small wave runs through the letters when Hen arrives ----------
+  (function hello() {
+    const h = $("hello");
+    const text = h.textContent;
+    h.textContent = "";
+    h.setAttribute("aria-label", text);
+    [...text].forEach((ch, i) => {
+      const span = el("span", "ch", ch);
+      span.setAttribute("aria-hidden", "true");
+      span.style.animationDelay = 300 + i * 32 + "ms";
+      if (i >= 3 && i <= 5) span.classList.add("hen");
+      h.append(span);
+    });
+    if (!reduceMotion) h.classList.add("wave");
+  })();
 
   // ---------- Start ----------
   route();
