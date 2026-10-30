@@ -10,7 +10,7 @@ window.COACH_DATA = {
       answer: "Your data is not used to train AI models. It is processed only to answer your request, under the same security terms you already have with monday.",
       keyPoints: [["not used to train", "won't train", "doesn't train", "never train", "not train"], ["security", "terms", "contract"]],
       next: "Send the AI data-use page to their security lead.",
-      sources: [{ title: "Trust Center: AI and your data", url: "https://monday.com/trustcenter" }]
+      sources: [{ title: "How monday AI handles your data", url: "https://support.monday.com/hc/en-us/articles/23227256685842-AI-FAQs" }, { title: "AI Trust Center", url: "https://monday.com/w/ai-trust-center" }]
     },
     {
       id: "residency", category: "Data",
@@ -20,7 +20,7 @@ window.COACH_DATA = {
       answer: "AI follows your account's data region. If your account is hosted in the EU, AI processing stays in the EU.",
       keyPoints: [["region", "eu", "us", "residency"], ["stays", "hosted"]],
       next: "Confirm their account region and share it with Legal.",
-      sources: [{ title: "Data residency", url: "https://monday.com/trustcenter" }]
+      sources: [{ title: "Where your data is stored", url: "https://support.monday.com/hc/en-us/articles/4404392703250-Data-residency" }, { title: "AI Trust Center", url: "https://monday.com/w/ai-trust-center" }]
     },
     {
       id: "vendor", category: "Trust",
@@ -30,7 +30,7 @@ window.COACH_DATA = {
       answer: "We use vetted model providers, listed on our sub-processor list. Each one passes our security review and is bound by contract not to train on your data.",
       keyPoints: [["vetted", "review", "approved"], ["sub-processor", "subprocessor", "list"]],
       next: "Share the sub-processor list today.",
-      sources: [{ title: "Sub-processor list", url: "https://monday.com/trustcenter" }]
+      sources: [{ title: "AI sub-processors", url: "https://monday.com/l/uncategorized/ai-sub-processors-in-depth-information/" }, { title: "How monday AI handles your data", url: "https://support.monday.com/hc/en-us/articles/23227256685842-AI-FAQs" }]
     },
     {
       id: "bill", category: "Cost",
@@ -40,27 +40,27 @@ window.COACH_DATA = {
       answer: "You set a monthly credit cap. When it is reached, AI pauses. Nothing goes over unless you choose it.",
       keyPoints: [["cap", "limit"], ["pause", "stop", "no overage", "never go over", "won't go over"]],
       next: "Offer a 2-user pilot with a small credit cap.",
-      sources: [{ title: "AI credits and caps", url: "https://support.monday.com" }]
+      sources: [{ title: "AI credits and usage limits", url: "https://support.monday.com/hc/en-us/articles/29544502265746-AI-Credits" }, { title: "AI permissions and governance", url: "https://support.monday.com/hc/en-us/articles/30934592475410-AI-Permissions" }]
     },
     {
       id: "credits", category: "Cost",
       keywords: ["credits", "black box", "consuming", "usage", "billing", "how many", "cfo", "depends on complexity", "different answers"],
-      short: "You can see exactly where every credit goes, by user and by board.",
+      short: "You can see exactly where every credit goes, by feature and by user.",
       worry: "Credits feel like a black box.",
-      answer: "Admins see credit use by user, board, and feature in one view. Run a 2-week pilot and you forecast from your own numbers, not guesses.",
+      answer: "Admins see credit use by feature and by user in one view. Run a 2-week pilot and you forecast from your own numbers, not guesses.",
       keyPoints: [["usage view", "see", "view", "dashboard", "track"], ["pilot", "forecast", "real numbers"]],
       next: "Book a 2-week pilot, then review usage together.",
-      sources: [{ title: "Credit usage view", url: "https://support.monday.com" }]
+      sources: [{ title: "AI credits and usage limits", url: "https://support.monday.com/hc/en-us/articles/29544502265746-AI-Credits" }, { title: "Understanding credit consumption", url: "https://support.monday.com/hc/en-us/articles/36207944364434-AI-Models-and-Credits-understanding-and-optimizing-consumption" }]
     },
     {
       id: "control", category: "Control",
       keywords: ["turn it on", "who can", "lock", "enable", "permissions", "admin", "on their own"],
       short: "You decide who gets AI. It stays off until an admin turns it on.",
       worry: "People will switch things on without approval.",
-      answer: "Admins decide who can use AI, by user or team. Nothing turns on unless an admin allows it.",
+      answer: "Admins decide who can use AI, by role and by workspace. Nothing turns on unless an admin allows it.",
       keyPoints: [["admin"], ["user", "team", "who can", "permission"]],
       next: "Walk their admin through the AI settings.",
-      sources: [{ title: "AI admin controls", url: "https://support.monday.com" }]
+      sources: [{ title: "AI permissions and governance", url: "https://support.monday.com/hc/en-us/articles/30934592475410-AI-Permissions" }]
     },
     {
       id: "killswitch", category: "Control",
@@ -70,27 +70,27 @@ window.COACH_DATA = {
       answer: "Yes. An admin can turn AI off for the whole account in one click, and turn it back on anytime.",
       keyPoints: [["one click", "turn off", "switch off", "shut"], ["admin", "anytime"]],
       next: "Show the off switch live in the admin panel.",
-      sources: [{ title: "AI admin controls", url: "https://support.monday.com" }]
+      sources: [{ title: "AI permissions and governance", url: "https://support.monday.com/hc/en-us/articles/30934592475410-AI-Permissions" }]
     },
     {
       id: "review", category: "Trust",
       keywords: ["wrong", "accountable", "write access", "human", "checking", "mistake", "glitch"],
-      short: "Agents can just suggest, and a person approves every change.",
+      short: "Start agents read-only, and you can pause or undo anything they do.",
       worry: "AI will make a mistake in front of a client.",
-      answer: "Set agents to suggest, not act. A person approves each change before it goes live.",
-      keyPoints: [["suggest", "draft"], ["approve", "review", "human", "person"]],
+      answer: "Start agents with read-only access on one board. Every run is listed, and you can pause an agent or undo its actions anytime.",
+      keyPoints: [["read-only","read only","limit","permission"],["pause","undo","log","review"]],
       next: "Pilot on an internal board first.",
-      sources: [{ title: "Agent approval settings", url: "https://support.monday.com" }]
+      sources: [{ title: "Run and manage your AI agents", url: "https://support.monday.com/hc/en-us/articles/38411316441874-Run-and-manage-your-AI-agents" }]
     },
     {
       id: "audit", category: "Trust",
       keywords: ["log", "what it did", "see things", "shouldn't", "step by step", "prompt", "where does"],
-      short: "Agents only see what their user sees, and everything they do is logged.",
+      short: "Agents only see what their user sees, and every run is logged.",
       worry: "They can't see what the AI does.",
-      answer: "Agents only see what their user can see. Every action is logged with what it did and why.",
+      answer: "Agents only see what their user can see. Every run is logged with what it did, and admins see every agent in one directory.",
       keyPoints: [["permission", "only see", "can see"], ["log", "audit", "history"]],
       next: "Open the activity log on a sample board.",
-      sources: [{ title: "Agent activity log", url: "https://support.monday.com" }]
+      sources: [{ title: "Run and manage your AI agents", url: "https://support.monday.com/hc/en-us/articles/38411316441874-Run-and-manage-your-AI-agents" }, { title: "AI permissions and governance", url: "https://support.monday.com/hc/en-us/articles/30934592475410-AI-Permissions" }]
     },
     {
       id: "pilot", category: "Control",
@@ -100,7 +100,7 @@ window.COACH_DATA = {
       answer: "Agreed. Start with 2 to 5 people on one workflow, cap the credits, and review after 2 weeks.",
       keyPoints: [["2", "two", "five", "few", "small"], ["review", "weeks", "cap"]],
       next: "Pick the pilot group and one workflow.",
-      sources: [{ title: "Pilot playbook", url: "https://support.monday.com" }]
+      sources: [{ title: "Get started with monday AI", url: "https://support.monday.com/hc/en-us/articles/11512670770834" }, { title: "AI permissions and governance", url: "https://support.monday.com/hc/en-us/articles/30934592475410-AI-Permissions" }]
     },
     {
       id: "chatgpt", category: "Value",
@@ -110,7 +110,7 @@ window.COACH_DATA = {
       answer: "ChatGPT only sees what you paste in. monday AI works inside your boards, with your data and permissions, and can take action there.",
       keyPoints: [["boards", "inside", "your data", "context"], ["action", "act", "do"]],
       next: "Show one board task ChatGPT can't do.",
-      sources: [{ title: "monday AI overview", url: "https://monday.com/w/ai" }]
+      sources: [{ title: "Get started with monday AI", url: "https://support.monday.com/hc/en-us/articles/11512670770834" }, { title: "AI feature catalog", url: "https://support.monday.com/hc/en-us/articles/24047211522194-AI-Feature-Catalog" }]
     },
     {
       id: "jobs", category: "Change",
@@ -120,7 +120,7 @@ window.COACH_DATA = {
       answer: "It takes the busywork, not the role. Teams spend the time they get back on clients and judgment calls.",
       keyPoints: [["busywork", "repetitive", "manual"], ["not replace", "not the role", "people", "team"]],
       next: "Ask which task their team would happily give away.",
-      sources: [{ title: "Customer stories", url: "https://monday.com/customers" }]
+      sources: [{ title: "AI blocks", url: "https://support.monday.com/hc/en-us/articles/18433811274386" }]
     },
     {
       id: "roi", category: "Value",
@@ -130,7 +130,7 @@ window.COACH_DATA = {
       answer: "Let's measure one workflow before and after. Hours saved times hourly cost gives you a real ROI in 2 weeks.",
       keyPoints: [["measure", "before and after", "baseline"], ["hours", "roi", "cost"]],
       next: "Agree on one workflow and its current time cost.",
-      sources: [{ title: "ROI worksheet", url: "https://support.monday.com" }]
+      sources: [{ title: "AI feature catalog", url: "https://support.monday.com/hc/en-us/articles/24047211522194-AI-Feature-Catalog" }]
     },
     {
       id: "bandwidth", category: "Change",
@@ -140,7 +140,7 @@ window.COACH_DATA = {
       answer: "Start with one workflow that already hurts. We set it up together in under an hour, and nothing else changes.",
       keyPoints: [["one workflow", "one", "small"], ["together", "we set", "help"]],
       next: "Ask which weekly task wastes the most time.",
-      sources: [{ title: "Quick-start workflows", url: "https://support.monday.com" }]
+      sources: [{ title: "Get started with monday AI", url: "https://support.monday.com/hc/en-us/articles/11512670770834" }]
     },
     {
       id: "automations", category: "Value",
@@ -150,7 +150,7 @@ window.COACH_DATA = {
       answer: "Keep your automations. They follow fixed rules. AI handles the work rules can't, like reading requests, summarizing updates, and drafting replies, and it can trigger your automations too.",
       keyPoints: [["fixed rules", "rules"], ["keep", "together", "trigger"]],
       next: "Find one step in their automations that still needs a person.",
-      sources: [{ title: "monday AI overview", url: "https://monday.com/w/ai" }]
+      sources: [{ title: "AI blocks", url: "https://support.monday.com/hc/en-us/articles/18433811274386" }, { title: "Get started with monday AI", url: "https://support.monday.com/hc/en-us/articles/11512670770834" }]
     },
     {
       id: "hype", category: "Value",
@@ -160,7 +160,7 @@ window.COACH_DATA = {
       answer: "Fair. Don't trust the pitch, test it. One workflow, 2 weeks, and your own data decides.",
       keyPoints: [["test", "try", "pilot", "prove"], ["your data", "your own", "numbers"]],
       next: "Share one story from a customer in their industry.",
-      sources: [{ title: "Customer stories", url: "https://monday.com/customers" }]
+      sources: [{ title: "Get started with monday AI", url: "https://support.monday.com/hc/en-us/articles/11512670770834" }]
     }
   ],
 
@@ -171,7 +171,7 @@ window.COACH_DATA = {
     answer: "Ask what's behind it: “What would need to be true for this to work for you?”",
     keyPoints: [],
     next: "We logged it so the team can add an approved answer.",
-    sources: []
+    sources: [{ title: "How monday AI handles your data", url: "https://support.monday.com/hc/en-us/articles/23227256685842-AI-FAQs" }]
   },
 
   user: { name: "Hen", role: "Enablement team", initials: "H" },

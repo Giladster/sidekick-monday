@@ -243,21 +243,45 @@
     next.append(el("span", "label", "Next step"), nextP);
     card.append(next);
 
-    if (c.sources && c.sources.length) {
-      const s = el("div", "sources");
-      s.append(el("span", "src-label", "Source"));
-      c.sources.forEach((src) => {
+    // Sources stay folded behind one quiet button, then slide open.
+    const sources = el("div", "sources");
+    card.append(sources);
+    const fillSources = (list) => {
+      sources.innerHTML = "";
+      sources.hidden = !(list && list.length);
+      if (sources.hidden) return;
+      const btn = el("button", "src-toggle", "See sources (" + list.length + ")");
+      btn.type = "button";
+      btn.setAttribute("aria-expanded", "false");
+      const wrap = el("div", "expand");
+      const ul = el("ul", "src-list");
+      list.forEach((src) => {
+        const li = el("li");
         const a = el("a", null, src.title + " ↗");
         a.href = src.url; a.target = "_blank"; a.rel = "noopener";
-        s.append(a);
+        li.append(a);
+        ul.append(li);
       });
-      card.append(s);
-    }
+      wrap.append(ul);
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const open = !sources.classList.contains("open");
+        sources.classList.toggle("open", open);
+        btn.setAttribute("aria-expanded", String(open));
+      });
+      sources.append(btn, wrap);
+    };
+    fillSources(c.sources);
 
     // Lets callers show "tailoring" and swap in the AI's version when it arrives.
     card.setTailoring = (on) => {
       status.lastChild.textContent = "Tailoring the answer to their words…";
       status.hidden = !on;
+    };
+    card.setSources = (list) => {
+      if (!list || !list.length || JSON.stringify(list) === JSON.stringify(c.sources)) return;
+      c.sources = list;
+      fillSources(list);
     };
     card.setAnswer = (text, nextText) => {
       c.answer = text;
@@ -438,7 +462,7 @@
       if (ai && ai.answer) { item.card = { ...item.card, answer: ai.answer, next: ai.next || item.card.next }; saveBoard(); }
       if (openCard && openCard.item === item) {
         openCard.cardEl.setTailoring(false);
-        if (ai && ai.answer) openCard.cardEl.setAnswer(ai.answer, ai.next);
+        if (ai && ai.answer) { openCard.cardEl.setAnswer(ai.answer, ai.next); openCard.cardEl.setSources(ai.sources); }
       }
     });
   }
@@ -557,7 +581,7 @@
         if (api.live) item.cardEl.setTailoring(true);
       }, (ai) => {
         item.cardEl.setTailoring(false);
-        if (ai && ai.answer) item.cardEl.setAnswer(ai.answer, ai.next);
+        if (ai && ai.answer) { item.cardEl.setAnswer(ai.answer, ai.next); item.cardEl.setSources(ai.sources); }
       });
     }
   }
