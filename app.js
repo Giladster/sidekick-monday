@@ -247,11 +247,11 @@
     card.append(top);
 
     card.append(el("h3", "worry", c.quote ? "“" + c.quote + "”" : c.worry));
-    if (c.short) {
-      const s = el("p", "short");
-      s.append(el("i", null, "✓"), document.createTextNode(c.short));
-      card.append(s);
-    }
+    const shortP = el("p", "short");
+    const shortText = document.createTextNode(c.short || "");
+    shortP.append(el("i", null, "✓"), shortText);
+    shortP.hidden = !c.short;
+    card.append(shortP);
     const answer = el("p", "answer", c.answer);
     card.append(answer);
     const status = el("div", "tailoring");
@@ -341,7 +341,13 @@
       c.sources = list;
       fillSources(list);
     };
-    card.setAnswer = (text, nextText) => {
+    card.setAnswer = (text, nextText, shortLine) => {
+      if (shortLine) {
+        c.short = shortLine;
+        shortText.textContent = shortLine;
+        shortP.hidden = false;
+        shortP.classList.remove("fade-swap"); void shortP.offsetWidth; shortP.classList.add("fade-swap");
+      }
       c.answer = text;
       answer.textContent = text;
       answer.classList.remove("fade-swap"); void answer.offsetWidth; answer.classList.add("fade-swap");
@@ -520,7 +526,7 @@
       if (ai && ai.answer) { item.card = { ...item.card, answer: ai.answer, next: ai.next || item.card.next }; saveBoard(); }
       if (openCard && openCard.item === item) {
         openCard.cardEl.setTailoring(false);
-        if (ai && ai.answer) { openCard.cardEl.setAnswer(ai.answer, ai.next); openCard.cardEl.setSources(ai.sources); }
+        if (ai && ai.answer) { openCard.cardEl.setAnswer(ai.answer, ai.next, ai.short); openCard.cardEl.setSources(ai.sources); }
       }
     });
   }
@@ -639,7 +645,7 @@
         if (api.live) item.cardEl.setTailoring(true);
       }, (ai) => {
         item.cardEl.setTailoring(false);
-        if (ai && ai.answer) { item.cardEl.setAnswer(ai.answer, ai.next); item.cardEl.setSources(ai.sources); }
+        if (ai && ai.answer) { item.cardEl.setAnswer(ai.answer, ai.next, ai.short); item.cardEl.setSources(ai.sources); }
       });
     }
   }

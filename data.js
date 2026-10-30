@@ -166,9 +166,9 @@ window.COACH_DATA = {
 
   fallback: {
     id: "new", category: "New",
-    short: "We don't have an approved answer yet, so start with a question.",
+    short: "Ask: “What would need to be true for this to work for you?”",
     worry: "Something new.",
-    answer: "Ask what's behind it: “What would need to be true for this to work for you?”",
+    answer: "We don't have an approved answer for this yet, so don't guess. Ask the question above to find the real worry, then follow up with facts.",
     keyPoints: [],
     next: "We logged it so the team can add an approved answer.",
     sources: [{ title: "How monday AI handles your data", url: "https://support.monday.com/hc/en-us/articles/23227256685842-AI-FAQs" }]
