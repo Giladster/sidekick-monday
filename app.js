@@ -84,17 +84,127 @@
   window.addEventListener("hashchange", route);
 
   // ---------- Ask ----------
-  async function ask(text) {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const X_ICON = '<svg viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
+  // Smoothly move the other cards when one is added or removed.
+  function flip(container, change) {
+    const items = [...container.children];
+    const before = new Map(items.map((n) => [n, n.getBoundingClientRect()]));
+    change();
+    if (reduceMotion) return;
+    [...container.children].forEach((n) => {
+      const r = before.get(n);
+      if (!r || n.classList.contains("leave")) return;
+      const now = n.getBoundingClientRect();
+      const dx = r.left - now.left, dy = r.top - now.top;
+      if (!dx && !dy) return;
+      n.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
+        { duration: 450, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
+    });
+  }
+
+  function iconButton(label, cls) {
+    const b = el("button", "icon-btn" + (cls ? " " + cls : ""));
+    b.type = "button";
+    b.setAttribute("aria-label", label);
+    b.innerHTML = X_ICON;
+    return b;
+  }
+
+  // A collapsed card on the board. Click opens it, the X removes it.
+  function renderTile(card) {
+    const t = el("div", "tile enter");
+    t.tabIndex = 0;
+    t.setAttribute("role", "button");
+    t.setAttribute("aria-label", "Open answer");
+    t.append(tag(card.category));
+    t.append(el("h3", null, card.quote ? "“" + card.quote + "”" : card.worry));
+    t.append(el("span", "open-hint", "See answer"));
+    const remove = iconButton("Remove card");
+    remove.addEventListener("click", (e) => { e.stopPropagation(); removeTile(t); });
+    t.append(remove);
+    const open = () => openSheet(t, card);
+    t.addEventListener("click", open);
+    t.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    t.addEventListener("animationend", () => t.classList.remove("enter"), { once: true });
+    return t;
+  }
+
+  function removeTile(t) {
+    const board = $("ask-results");
+    t.classList.add("leave");
+    setTimeout(() => flip(board, () => t.remove()), reduceMotion ? 0 : 260);
+  }
+
+  // Open a card: it grows from its spot in the grid into a centered sheet.
+  let sheetOpen = null;
+  function openSheet(tile, card) {
+    if (sheetOpen) return;
+    const backdrop = el("div", "backdrop");
+    const sheet = el("div", "sheet");
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
+    const full = renderCard(card);
+    const close = iconButton("Close", "close");
+    full.style.position = "relative";
+    full.append(close);
+    sheet.append(full);
+    document.body.append(backdrop, sheet);
+
+    const from = tile.getBoundingClientRect();
+    const place = () => {
+      const w = sheet.offsetWidth, h = sheet.offsetHeight;
+      return { left: (innerWidth - w) / 2, top: Math.max(32, (innerHeight - h) / 2), w, h };
+    };
+    const to = place();
+    sheet.style.left = to.left + "px";
+    sheet.style.top = to.top + "px";
+    const scale = `scale(${from.width / to.w}, ${from.height / to.h})`;
+    const fromT = `translate(${from.left - to.left}px, ${from.top - to.top}px) ${scale}`;
+    const ease = "cubic-bezier(0.2, 0.85, 0.25, 1)";
+    tile.style.visibility = "hidden";
+    requestAnimationFrame(() => backdrop.classList.add("show"));
+    if (!reduceMotion) {
+      sheet.animate([{ transform: fromT, opacity: 0.6 }, { transform: "none", opacity: 1 }], { duration: 480, easing: ease });
+      full.animate([{ opacity: 0 }, { opacity: 0 , offset: 0.25 }, { opacity: 1 }], { duration: 480 });
+    }
+    close.focus({ preventScroll: true });
+
+    const shut = () => {
+      if (!sheetOpen) return;
+      sheetOpen = null;
+      document.removeEventListener("keydown", onKey);
+      backdrop.classList.remove("show");
+      const back = tile.getBoundingClientRect();
+      const cur = sheet.getBoundingClientRect();
+      const t2 = `translate(${back.left - cur.left}px, ${back.top - cur.top}px) scale(${back.width / cur.width}, ${back.height / cur.height})`;
+      const done = () => { sheet.remove(); backdrop.remove(); tile.style.visibility = ""; tile.focus({ preventScroll: true }); };
+      if (reduceMotion) return done();
+      full.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "forwards" });
+      sheet.animate([{ transform: "none" }, { transform: t2 }], { duration: 380, easing: ease, fill: "forwards" }).onfinish = done;
+    };
+    const onKey = (e) => { if (e.key === "Escape") shut(); };
+    document.addEventListener("keydown", onKey);
+    backdrop.addEventListener("click", shut);
+    close.addEventListener("click", shut);
+    sheetOpen = shut;
+  }
+
+  async function ask(text, quiet) {
     text = text.trim();
     if (!text) return;
-    const results = $("ask-results");
-    const wait = thinking();
-    results.prepend(wait);
+    const board = $("ask-results");
+    const wait = el("div", "tile loading");
+    wait.append(thinking());
+    flip(board, () => board.prepend(wait));
     try {
       const card = await api.answer(text);
-      wait.replaceWith(renderCard(card));
+      const t = renderTile(card);
+      if (quiet) t.classList.remove("enter");
+      wait.replaceWith(t);
     } catch (e) {
-      wait.remove();
+      flip(board, () => wait.remove());
       toast("Couldn't get an answer. Check your connection and try again.");
     }
   }
@@ -120,8 +230,8 @@
   async function findInEmail() {
     const out = $("email-results");
     const text = $("email-input").value.trim();
-    out.innerHTML = "";
     if (!text) { toast("Paste an email first."); return; }
+    out.innerHTML = "";
     const wait = thinking();
     out.append(wait);
     try {
@@ -165,7 +275,7 @@
   $("email-find").addEventListener("click", findInEmail);
   $("email-clear").addEventListener("click", () => {
     $("email-input").value = "";
-    $("email-results").innerHTML = "";
+    $("email-results").innerHTML = '<p class="empty">Objections will show up here.</p>';
     $("email-input").focus();
   });
   $("email-input").value = D.sampleEmail;
@@ -267,10 +377,31 @@
     $("practice-q").textContent = "“" + objection.replace(/^“|”$/g, "") + "”";
     $("practice-q").dataset.raw = objection;
     $("practice-input").value = "";
-    $("practice-result").innerHTML = "";
+    growInput();
+    showPracticePlaceholder();
     $("practice-submit").hidden = false;
     $("practice-skip").textContent = "Skip";
   }
+  function showPracticePlaceholder() {
+    const out = $("practice-result");
+    out.innerHTML = "";
+    const ph = el("div", "placeholder");
+    ph.innerHTML = '<svg viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="18" stroke="currentColor" stroke-width="3" opacity=".25"/><path d="M22 4a18 18 0 0 1 18 18" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+    ph.append(el("p", null, "Your score and tips show up here."));
+    out.append(ph);
+  }
+  // The answer box starts as one line and grows with the text.
+  function growInput() {
+    const t = $("practice-input");
+    t.style.height = "auto";
+    t.style.height = Math.min(t.scrollHeight, 300) + "px";
+    t.style.overflowY = t.scrollHeight > 300 ? "auto" : "hidden";
+  }
+  $("practice-input").addEventListener("input", growInput);
+  $("practice-input").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); if (!$("practice-submit").hidden) submitPractice(); }
+  });
+
   const SVG = "http://www.w3.org/2000/svg";
   function svg(tag, attrs) {
     const n = document.createElementNS(SVG, tag);
@@ -321,7 +452,7 @@
       $("practice-submit").hidden = true;
       $("practice-skip").textContent = "Next objection";
     } catch (e) {
-      out.innerHTML = "";
+      showPracticePlaceholder();
       toast("Couldn't score that. Try again.");
     } finally {
       $("practice-submit").disabled = false;
@@ -482,5 +613,5 @@
   // ---------- Start ----------
   route();
   // Open with one example answer so the page shows what it does.
-  commonReady.then((list) => list.length && api.answer(list[0].text)).then((c) => c && $("ask-results").append(renderCard(c)));
+  commonReady.then((list) => list.length && ask(list[0].text, true));
 })();

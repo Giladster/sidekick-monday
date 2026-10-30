@@ -22,6 +22,8 @@
   --c-data: #007aff; --c-cost: #ff9500; --c-control: #af52de;
   --c-trust: #30b0c7; --c-value: #34c759; --c-change: #ff2d55; --c-new: #8e8e93;
   --glow-1: rgba(0, 122, 255, 0.07); --glow-2: rgba(175, 82, 222, 0.06);
+  --gutter: clamp(16px, 4vw, 56px);
+  --muted-strong: #48484a;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -30,7 +32,7 @@
     --bg: #000000; --card: #1c1c1e; --fill: #2c2c2e; --fg: #f5f5f7; --muted: #98989d;
     --line: rgba(255, 255, 255, 0.1); --accent: #2997ff; --accent-hover: #47a6ff; --on-accent: #ffffff;
     --nav: rgba(22, 22, 23, 0.78); --seg: rgba(118, 118, 128, 0.24); --seg-on: #636366;
-    --shadow: none; --good: #30d158; --warn: #ff9f0a; --live: #ff453a;
+    --shadow: none; --muted-strong: #c7c7cc; --good: #30d158; --warn: #ff9f0a; --live: #ff453a;
     --c-data: #0a84ff; --c-cost: #ff9f0a; --c-control: #bf5af2;
     --c-trust: #40c8e0; --c-value: #30d158; --c-change: #ff375f; --c-new: #98989d;
     --glow-1: rgba(10, 132, 255, 0.10); --glow-2: rgba(191, 90, 242, 0.08);
@@ -41,7 +43,7 @@
   --bg: #000000; --card: #1c1c1e; --fill: #2c2c2e; --fg: #f5f5f7; --muted: #98989d;
   --line: rgba(255, 255, 255, 0.1); --accent: #2997ff; --accent-hover: #47a6ff; --on-accent: #ffffff;
   --nav: rgba(22, 22, 23, 0.78); --seg: rgba(118, 118, 128, 0.24); --seg-on: #636366;
-  --shadow: none; --good: #30d158; --warn: #ff9f0a; --live: #ff453a;
+  --shadow: none; --muted-strong: #c7c7cc; --good: #30d158; --warn: #ff9f0a; --live: #ff453a;
   --c-data: #0a84ff; --c-cost: #ff9f0a; --c-control: #bf5af2;
   --c-trust: #40c8e0; --c-value: #30d158; --c-change: #ff375f; --c-new: #98989d;
   --glow-1: rgba(10, 132, 255, 0.10); --glow-2: rgba(191, 90, 242, 0.08);
@@ -75,9 +77,9 @@ button, input, textarea { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--line);
 }
 .nav-inner {
-  max-width: 1040px; margin: 0 auto; min-height: 60px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  max-width: 1680px; margin: 0 auto; min-height: 60px;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
   padding-block: 10px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
 }
@@ -102,10 +104,10 @@ button, input, textarea { font: inherit; color: inherit; }
 
 /* Page */
 main {
-  max-width: 760px; margin: 0 auto;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 72px 120px;
+  max-width: 1680px; margin: 0 auto;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  padding-block: 56px 120px;
 }
 .view { display: flex; flex-direction: column; gap: 40px; }
 .hero { display: flex; flex-direction: column; gap: 10px; }
@@ -115,7 +117,9 @@ h1 {
 }
 .sub { font-size: 21px; color: var(--muted); margin: 0; letter-spacing: -0.01em; }
 .stack { display: flex; flex-direction: column; gap: 28px; }
-.label { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
+.label { font-size: 16px; font-weight: 600; color: var(--muted-strong); letter-spacing: -0.005em; }
+.split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.split > * { min-width: 0; }
 
 /* Buttons */
 .btn {
@@ -133,6 +137,7 @@ h1 {
 .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
 
 /* Ask bar */
+.ask-top { display: flex; flex-direction: column; gap: 20px; max-width: 980px; }
 .ask {
   display: flex; gap: 8px; align-items: center;
   background: var(--card); border-radius: 22px; padding: 8px 8px 8px 24px;
@@ -142,11 +147,11 @@ h1 {
 .ask input::placeholder { color: var(--muted); }
 .common { display: flex; flex-direction: column; gap: 12px; }
 .common-head { display: flex; align-items: center; gap: 8px; }
-.common-head svg { width: 16px; height: 16px; color: var(--c-cost); }
+.common-head svg { width: 18px; height: 18px; color: var(--c-cost); }
 .chips { display: flex; gap: 10px; flex-wrap: wrap; }
 .chip {
   border: 1px solid var(--line); background: var(--card); color: var(--fg);
-  border-radius: 980px; padding: 8px 16px; font-size: 15px; cursor: pointer;
+  border-radius: 980px; padding: 10px 18px; font-size: 16px; font-weight: 500; cursor: pointer;
 }
 .chip { display: inline-flex; align-items: center; gap: 8px; }
 .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--c, var(--c-new)); }
@@ -176,13 +181,13 @@ h1 {
 [data-cat="Value"] { --c: var(--c-value); }
 [data-cat="Change"] { --c: var(--c-change); }
 .quote { font-size: 15px; color: var(--muted); margin: 0; }
-.worry { font-family: var(--font-display); font-size: 30px; line-height: 1.15; font-weight: 600; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
-.answer { font-size: 20px; line-height: 1.5; margin: 0; max-width: 60ch; }
+.worry { font-family: var(--font-display); font-size: 28px; line-height: 1.22; font-weight: 600; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+.answer { font-size: 20px; line-height: 1.5; margin: 0; max-width: 62ch; font-weight: 500; }
 .next {
-  background: var(--fill); border-radius: 18px; padding: 18px 22px;
+  background: color-mix(in srgb, var(--c-data) 9%, transparent); border-radius: 18px; padding: 18px 22px;
   display: flex; flex-direction: column; gap: 4px;
 }
-.next p { margin: 0; font-weight: 500; }
+.next p { margin: 0; font-weight: 600; font-size: 18px; }
 .sources { display: flex; gap: 8px 20px; flex-wrap: wrap; }
 .sources a { color: var(--accent); text-decoration: none; font-size: 15px; }
 .sources a:hover { text-decoration: underline; }
@@ -194,9 +199,65 @@ h1 {
 .thinking span:nth-child(3) { animation-delay: 0.4s; }
 @keyframes blink { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
 
+/* Ask board */
+.board { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 22px; }
+.tile {
+  position: relative; text-align: left; cursor: pointer;
+  background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow);
+  border-radius: 26px; padding: 26px 26px 22px; min-height: 196px;
+  display: flex; flex-direction: column; gap: 16px;
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s;
+}
+.tile:hover { transform: translateY(-3px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04), 0 18px 44px rgba(0, 0, 0, 0.09); }
+.tile h3 {
+  margin: 0; font-family: var(--font-display); font-size: 22px; line-height: 1.28; font-weight: 600; letter-spacing: -0.015em;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.tile .open-hint { margin-top: auto; font-size: 15px; font-weight: 600; color: var(--accent); }
+.tile.loading { cursor: default; justify-content: center; align-items: center; }
+.tile.loading:hover { transform: none; }
+.icon-btn {
+  width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--fill); color: var(--muted-strong); display: grid; place-items: center; flex: none;
+  transition: background 0.2s, color 0.2s;
+}
+.icon-btn:hover { background: color-mix(in srgb, var(--live) 14%, var(--fill)); color: var(--fg); }
+.icon-btn svg { width: 14px; height: 14px; }
+.tile .icon-btn { position: absolute; top: 16px; right: 16px; opacity: 0; transition: opacity 0.2s; }
+.tile:hover .icon-btn, .tile:focus-within .icon-btn { opacity: 1; }
+@media (hover: none) { .tile .icon-btn { opacity: 1; } }
+
+/* New card: subtle fade in, then a gentle settle */
+.tile.enter { animation: tileIn 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes tileIn {
+  0% { opacity: 0; transform: translateY(14px) scale(0.96); }
+  45% { opacity: 1; transform: translateY(0) scale(1.025); }
+  70% { transform: scale(0.992); }
+  100% { opacity: 1; transform: none; }
+}
+.tile.leave { animation: tileOut 0.28s ease-in both; pointer-events: none; }
+@keyframes tileOut { to { opacity: 0; transform: scale(0.92); } }
+
+.backdrop {
+  position: fixed; inset: 0; z-index: 30;
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  opacity: 0; transition: opacity 0.35s ease;
+}
+.backdrop.show { opacity: 1; }
+.sheet {
+  position: fixed; z-index: 31; left: 50%; top: 50%;
+  width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow: auto;
+  transform-origin: top left; border-radius: 28px;
+}
+.sheet .card { animation: none; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.18); padding-top: 34px; }
+.sheet .card-top { padding-right: 46px; }
+.sheet .close { position: absolute; top: 26px; right: 26px; }
+.sheet .close:hover { background: var(--fill); filter: brightness(0.94); }
+
 /* Email */
 .paper {
-  background: var(--card); border-radius: 28px; padding: 32px 36px;
+  background: var(--card); border-radius: 28px; padding: 32px 36px; position: sticky; top: 92px;
   box-shadow: var(--shadow); border: 1px solid var(--line);
   display: flex; flex-direction: column; gap: 20px;
 }
@@ -274,7 +335,20 @@ textarea::placeholder { color: var(--muted); }
   border: 1px solid var(--line); box-shadow: var(--shadow);
   display: flex; flex-direction: column; gap: 10px;
 }
-.reply textarea { min-height: 130px; font-size: 20px; line-height: 1.5; }
+.reply textarea {
+  min-height: 0; height: auto; resize: none; overflow-y: hidden;
+  font-size: 20px; line-height: 1.5; padding: 0; max-height: 300px;
+}
+.reply textarea:focus-visible { outline: none; }
+.reply:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.composer-row { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.composer-row small { color: var(--muted); font-size: 14px; }
+.placeholder {
+  border: 2px dashed var(--line); border-radius: 28px; padding: 48px 32px; text-align: center;
+  color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.placeholder svg { width: 44px; height: 44px; color: var(--c-value); }
+.placeholder p { margin: 0; font-size: 18px; font-weight: 500; }
 .btn-lg { font-size: 18px; padding: 14px 30px; font-weight: 600; }
 .result {
   background: var(--card); border-radius: 28px; padding: 40px;
@@ -338,7 +412,11 @@ textarea::placeholder { color: var(--muted); }
   background: var(--fg); color: var(--bg); font-size: 13px; font-weight: 600;
   padding: 6px 10px; border-radius: 10px; white-space: nowrap;
 }
-.duo { display: grid; grid-template-columns: 1fr; gap: 20px; }
+.dash { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
+.span-8 { grid-column: span 8; } .span-4 { grid-column: span 4; }
+.span-6 { grid-column: span 6; }
+.dash .donut-wrap { flex-direction: column; align-items: stretch; }
+.dash .donut { align-self: center; width: 190px; height: 190px; }
 .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
 .donut { width: 168px; height: 168px; flex: none; position: relative; }
 .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
@@ -384,6 +462,12 @@ textarea::placeholder { color: var(--muted); }
   font-size: 15px; font-weight: 500; max-width: calc(100% - 32px); text-align: center;
 }
 
+@media (max-width: 1100px) {
+  .split { grid-template-columns: 1fr; }
+  .paper { position: static; }
+  .span-8, .span-4, .span-6 { grid-column: span 12; }
+  .dash .donut-wrap { flex-direction: row; align-items: center; }
+}
 @media (max-width: 640px) {
   main { padding-block: 40px 96px; }
   .view { gap: 28px; }
@@ -428,10 +512,10 @@ textarea::placeholder { color: var(--muted); }
   <!-- Ask -->
   <section class="view" id="view-ask" data-view="ask">
     <header class="hero">
-      <h1>What did the customer say?</h1>
-      <p class="sub">Get a clear answer in seconds.</p>
+      <h1>What’s holding your customer back?</h1>
+      <p class="sub">Type what they said. Get a clear answer in seconds.</p>
     </header>
-    <div class="stack" style="gap:16px">
+    <div class="ask-top">
       <form class="ask" id="ask-form" autocomplete="off">
         <input id="ask-input" type="text" placeholder="Type an objection" aria-label="Customer objection">
         <button class="btn btn-primary" type="submit">Get answer</button>
@@ -444,7 +528,7 @@ textarea::placeholder { color: var(--muted); }
         <div class="chips" id="ask-chips"></div>
       </div>
     </div>
-    <div class="stack" id="ask-results"></div>
+    <div class="board" id="ask-results" aria-live="polite"></div>
   </section>
 
   <!-- Email -->
@@ -453,6 +537,7 @@ textarea::placeholder { color: var(--muted); }
       <h1>Paste an email.</h1>
       <p class="sub">We'll find every objection in it.</p>
     </header>
+    <div class="split">
     <div class="paper">
       <textarea id="email-input" aria-label="Customer email" placeholder="Paste the customer's email or call notes"></textarea>
       <div class="row">
@@ -460,7 +545,8 @@ textarea::placeholder { color: var(--muted); }
         <button class="btn btn-link" id="email-clear" type="button">Clear</button>
       </div>
     </div>
-    <div class="found" id="email-results"></div>
+    <div class="found" id="email-results"><p class="empty">Objections will show up here.</p></div>
+    </div>
   </section>
 
   <!-- Live call -->
@@ -469,6 +555,7 @@ textarea::placeholder { color: var(--muted); }
       <h1>Live call.</h1>
       <p class="sub">Answers appear while the customer talks.</p>
     </header>
+    <div class="split">
     <div class="live-panel">
       <button class="mic" id="live-mic" type="button" aria-label="Start listening">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
@@ -480,6 +567,7 @@ textarea::placeholder { color: var(--muted); }
     <div class="stack" id="live-cards" style="gap:16px">
       <p class="empty">Objections will show up here.</p>
     </div>
+    </div>
   </section>
 
   <!-- Practice -->
@@ -488,22 +576,29 @@ textarea::placeholder { color: var(--muted); }
       <h1>Practice.</h1>
       <p class="sub">A tough customer. Your answer. A score.</p>
     </header>
-    <div class="customer">
-      <div class="persona">
-        <div class="avatar" aria-hidden="true">MK</div>
-        <div><strong>Mark Klein</strong><span>Head of Operations, Brightline</span></div>
+    <div class="split">
+      <div class="stack">
+        <div class="customer">
+          <div class="persona">
+            <div class="avatar" aria-hidden="true">MK</div>
+            <div><strong>Mark Klein</strong><span>Head of Operations, Brightline</span></div>
+          </div>
+          <blockquote id="practice-q"></blockquote>
+        </div>
+        <div class="reply">
+          <span class="label">Your answer</span>
+          <textarea id="practice-input" rows="1" aria-label="Your answer" placeholder="Type how you'd answer Mark"></textarea>
+          <div class="composer-row">
+            <small>Enter to submit, Shift+Enter for a new line</small>
+            <div class="row">
+              <button class="btn btn-quiet btn-lg" id="practice-skip" type="button">Skip</button>
+              <button class="btn btn-primary btn-lg" id="practice-submit" type="button">Submit</button>
+            </div>
+          </div>
+        </div>
       </div>
-      <blockquote id="practice-q"></blockquote>
+      <div id="practice-result"></div>
     </div>
-    <div class="reply">
-      <span class="label">Your answer</span>
-      <textarea id="practice-input" aria-label="Your answer" placeholder="Type how you'd answer Mark"></textarea>
-    </div>
-    <div class="row">
-      <button class="btn btn-primary btn-lg" id="practice-submit" type="button">Submit</button>
-      <button class="btn btn-quiet btn-lg" id="practice-skip" type="button">Skip</button>
-    </div>
-    <div id="practice-result"></div>
   </section>
 
   <!-- Analytics -->
@@ -512,24 +607,24 @@ textarea::placeholder { color: var(--muted); }
       <h1>Analytics.</h1>
       <p class="sub">What customers push back on, and where it's heading.</p>
     </header>
-    <div class="panel">
-      <span class="label" id="ins-period">Objections heard</span>
-      <div class="headline"><strong id="ins-heard">0</strong><span class="delta" id="ins-delta"></span></div>
-      <div class="chart" id="ins-line"></div>
-    </div>
-    <div class="duo">
-      <div class="panel">
+    <div class="dash">
+      <div class="panel span-8">
+        <span class="label" id="ins-period">Objections heard</span>
+        <div class="headline"><strong id="ins-heard">0</strong><span class="delta" id="ins-delta"></span></div>
+        <div class="chart" id="ins-line"></div>
+      </div>
+      <div class="panel span-4">
         <h2>By topic</h2>
         <div class="donut-wrap" id="ins-donut"></div>
       </div>
-      <div class="panel">
+      <div class="panel span-6">
         <h2>Top objections</h2>
         <div class="bars" id="ins-trending"></div>
       </div>
-    </div>
-    <div class="panel">
-      <h2>No answer yet</h2>
-      <div class="gaps" id="ins-gaps"></div>
+      <div class="panel span-6">
+        <h2>No answer yet</h2>
+        <div class="gaps" id="ins-gaps"></div>
+      </div>
     </div>
     <p class="note">Sample data</p>
   </section>

@@ -43,7 +43,7 @@ window.COACH_DATA = {
       keywords: ["credits", "black box", "consuming", "usage", "billing", "how many", "cfo", "depends on complexity", "different answers"],
       worry: "Credits feel like a black box.",
       answer: "Admins see credit use by user, board, and feature in one view. Run a 2-week pilot and you forecast from your own numbers, not guesses.",
-      keyPoints: [["see", "view", "dashboard", "track"], ["pilot", "forecast", "real numbers"]],
+      keyPoints: [["usage view", "see", "view", "dashboard", "track"], ["pilot", "forecast", "real numbers"]],
       next: "Book a 2-week pilot, then review usage together.",
       sources: [{ title: "Credit usage view", url: "https://support.monday.com" }]
     },
@@ -200,7 +200,7 @@ Mark`,
     trending: [
       { label: "Surprise bills", category: "Cost", count: 64, change: 18, example: "I'm worried about a surprise bill." },
       { label: "Data used for training", category: "Data", count: 51, change: 9, example: "Is our data used to train your models?" },
-      { label: "Who controls AI", category: "Control", count: 43, change: 4, example: "Can I control who turns AI on?" },
+      { label: "Who controls AI", category: "Control", count: 43, change: 4, example: "Who can turn AI on in our account?" },
       { label: "Already have ChatGPT", category: "Value", count: 32, change: 12, example: "We already pay for ChatGPT." },
       { label: "Fear of job loss", category: "Change", count: 21, change: -3, example: "Will this replace people on my team?" }
     ],
