@@ -750,6 +750,23 @@ textarea::placeholder { color: var(--muted); }
   .result { grid-template-columns: 1fr; justify-items: start; }
   .donut-wrap { justify-content: center; }
 }
+
+/* Motion: nothing changes instantly */
+.appear { animation: appear 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.view.appear { animation-duration: 0.5s; }
+.vanish { animation: vanish 0.22s ease-in both; pointer-events: none; }
+@keyframes appear { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes vanish { to { opacity: 0; transform: translateY(4px); } }
+.seg, .mini-seg { position: relative; isolation: isolate; }
+.seg .pill, .mini-seg .pill {
+  position: absolute; z-index: -1; top: 3px; left: 0; height: calc(100% - 6px); border-radius: 9px;
+  background: var(--seg-on); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12); pointer-events: none;
+  transition: transform 0.38s cubic-bezier(0.2, 0.8, 0.2, 1), width 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.mini-seg .pill { border-radius: 8px; }
+.seg.has-pill a[aria-current="page"], .mini-seg.has-pill button[aria-pressed="true"] { background: none; box-shadow: none; }
+.seg a, .mini-seg button { transition: color 0.25s, font-weight 0.25s; }
+.obj-row.appear { animation-duration: 0.32s; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

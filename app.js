@@ -22,12 +22,65 @@
     }
   };
 
+  // ---------- Motion ----------
+  // Anything that becomes visible fades and rises in. Anything that leaves fades out
+  // first (use hide()). Segmented controls get a sliding pill.
+  function hide(node, on = true) {
+    if (!on) { node.hidden = false; return; }
+    if (node.hidden || reduceMotion || !node.offsetParent) { node.hidden = true; return; }
+    node.classList.remove("appear");
+    node.classList.add("vanish");
+    node.addEventListener("animationend", () => { node.classList.remove("vanish"); node.hidden = true; }, { once: true });
+  }
+  const NO_APPEAR = "#drawer, .chart-tip, .sheet, .sheet-backdrop";
+  if (!reduceMotion) {
+    new MutationObserver((list) => {
+      for (const m of list) {
+        const n = m.target;
+        if (m.oldValue === null || n.hidden || n.matches(NO_APPEAR)) continue;
+        n.classList.remove("appear", "vanish");
+        void n.offsetWidth;
+        n.classList.add("appear");
+        n.addEventListener("animationend", () => n.classList.remove("appear"), { once: true });
+      }
+    }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["hidden"], attributeOldValue: true });
+  }
+  function pill(group) {
+    const p = el("div", "pill");
+    p.setAttribute("aria-hidden", "true");
+    group.prepend(p);
+    group.classList.add("has-pill");
+    let first = true;
+    const place = () => {
+      const on = group.querySelector('[aria-current="page"], [aria-pressed="true"]');
+      if (!on || !group.offsetParent) return;
+      if (first || reduceMotion) p.style.transition = "none";
+      p.style.width = on.offsetWidth + "px";
+      p.style.transform = `translateX(${on.offsetLeft}px)`;
+      if (first || reduceMotion) { void p.offsetWidth; p.style.transition = ""; }
+      first = false;
+    };
+    new MutationObserver(place).observe(group, { subtree: true, attributes: true, attributeFilter: ["aria-current", "aria-pressed", "hidden"], childList: true, characterData: true });
+    new ResizeObserver(place).observe(group);
+    place();
+  }
+
+  // Fade a freshly drawn list in, one item after another.
+  function stagger(nodes, step = 35, max = 12) {
+    if (reduceMotion) return;
+    [...nodes].forEach((n, i) => {
+      n.style.animationDelay = Math.min(i, max) * step + "ms";
+      n.classList.add("appear");
+      n.addEventListener("animationend", () => { n.classList.remove("appear"); n.style.animationDelay = ""; }, { once: true });
+    });
+  }
+
   function toast(msg) {
     const t = $("toast");
     t.textContent = msg;
     t.hidden = false;
     clearTimeout(toast.timer);
-    toast.timer = setTimeout(() => (t.hidden = true), 2200);
+    toast.timer = setTimeout(() => hide(t), 2200);
   }
 
   function thinking() {
@@ -63,18 +116,22 @@
 
   // Smoothly move siblings when one is added, removed or moved.
   function flip(container, change) {
-    const before = new Map([...container.children].map((n) => [n, n.getBoundingClientRect()]));
+    const key = (n) => n.dataset.id || n;
+    const before = new Map([...container.children].map((n) => [key(n), n.getBoundingClientRect()]));
     change();
     if (reduceMotion) return;
+    const fresh = [];
     [...container.children].forEach((n) => {
-      const r = before.get(n);
-      if (!r || n.classList.contains("leave") || n.classList.contains("dragging")) return;
+      const r = before.get(key(n));
+      if (!r) { if (!n.classList.contains("enter")) fresh.push(n); return; }
+      if (n.classList.contains("leave") || n.classList.contains("dragging")) return;
       const now = n.getBoundingClientRect();
       const dx = r.left - now.left, dy = r.top - now.top;
       if (!dx && !dy) return;
       n.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }],
         { duration: 380, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
     });
+    stagger(fresh);
   }
 
   // Drag and drop to reorder the children of a grid (mouse and trackpad).
@@ -659,6 +716,7 @@
     $("email-tabs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === t)));
     $("email-results").hidden = t !== "list";
     $("email-draft-view").hidden = t !== "draft";
+    $("email-results").classList.remove("vanish"); $("email-draft-view").classList.remove("vanish");
   }
   $("email-tabs").addEventListener("click", (e) => {
     const b = e.target.closest("button");
@@ -836,7 +894,7 @@
   function updateListCounts() {
     $("obj-list-count").textContent = "Practice list: " + practiceList.length;
     $("pr-list-n").textContent = practiceList.length;
-    $("obj-practice").hidden = !practiceList.length;
+    hide($("obj-practice"), !practiceList.length);
   }
 
   ["All", ...CATS].forEach((c) => {
@@ -913,7 +971,7 @@
   function resetList() {
     listDone = [];
     saveDone();
-    $("pr-done").hidden = true;
+    hide($("pr-done"));
     renderDrawer();
   }
 
@@ -989,6 +1047,7 @@
       row.append(qd, freq, acts);
       rows.append(row);
     });
+    stagger(rows.children, 25);
   }
   updateListCounts();
 
@@ -1118,7 +1177,7 @@
     }
     if (m === "list") {
       if (!listLeft().length) resetList();
-      $("pr-done").hidden = true;
+      hide($("pr-done"));
     }
     const changed = m !== practiceMode;
     practiceMode = m;
@@ -1142,6 +1201,8 @@
     }
     $("practice-q").textContent = "“" + objection.replace(/^“|”$/g, "") + "”";
     $("practice-q").dataset.raw = objection;
+    const pq = $("practice-q");
+    if (!reduceMotion) { pq.classList.remove("appear"); void pq.offsetWidth; pq.classList.add("appear"); }
     $("practice-input").value = "";
     growInput();
     showPracticePlaceholder();
@@ -1422,4 +1483,5 @@
 
   // ---------- Start ----------
   route();
+  document.querySelectorAll(".seg, .mini-seg").forEach(pill);
 })();
