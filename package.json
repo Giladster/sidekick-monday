@@ -1,0 +1,10 @@
+{
+  "name": "sidekick-monday",
+  "private": true,
+  "type": "module",
+  "engines": { "node": "22.x" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.3.0",
+    "@neondatabase/serverless": "^1.2.0"
+  }
+}
