@@ -83,11 +83,40 @@
     toast.timer = setTimeout(() => hide(t), 2200);
   }
 
+  // Small loader: a soft gradient ring that spins.
   function thinking() {
     const t = el("div", "thinking");
-    t.setAttribute("aria-label", "Thinking");
-    t.append(el("span"), el("span"), el("span"));
+    t.setAttribute("role", "status");
+    t.setAttribute("aria-label", "Working");
+    t.append(el("span", "orb"));
     return t;
+  }
+
+  // Big loader shown while the AI writes an answer: the customer's words on top,
+  // a glowing orb with a changing status line, and shimmering lines where the answer will be.
+  function loadingCard(quote) {
+    const card = el("article", "card loading");
+    card.append(el("span", "sk sk-tag"));
+    card.append(el("h3", "worry", "“" + quote + "”"));
+    const row = el("div", "load-row");
+    const orb = el("span", "orb big");
+    orb.innerHTML = ICONS.spark;
+    const msg = el("span", "load-msg", "Reading their words");
+    row.append(orb, msg);
+    card.append(row);
+    const lines = el("div", "sk-lines");
+    ["92%", "100%", "64%"].forEach((w) => { const l = el("span", "sk"); l.style.width = w; lines.append(l); });
+    card.append(lines);
+    const steps = ["Reading their words", "Checking approved answers", "Writing it for you"];
+    let i = 0;
+    const timer = setInterval(() => {
+      i = Math.min(i + 1, steps.length - 1);
+      msg.classList.add("out");
+      setTimeout(() => { msg.textContent = steps[i]; msg.classList.remove("out"); }, 220);
+      if (i === steps.length - 1) clearInterval(timer);
+    }, 1100);
+    card.stop = () => clearInterval(timer);
+    return card;
   }
 
   function tag(category) {
@@ -247,17 +276,16 @@
     card.append(top);
 
     card.append(el("h3", "worry", c.quote ? "“" + c.quote + "”" : c.worry));
-    const shortP = el("p", "short");
+    // No approved answer: say so plainly and give one question to ask instead.
+    const unknown = c.id === "new";
+    const shortP = el("p", "short" + (unknown ? " none" : ""));
     const shortText = document.createTextNode(c.short || "");
-    shortP.append(el("i", null, "✓"), shortText);
+    shortP.append(el("i", null, unknown ? "?" : "✓"), shortText);
     shortP.hidden = !c.short;
     card.append(shortP);
-    const answer = el("p", "answer", c.answer);
+    if (unknown) card.append(el("span", "label", "Try asking"));
+    const answer = el("p", "answer" + (unknown ? " ask-q" : ""), c.answer);
     card.append(answer);
-    const status = el("div", "tailoring");
-    status.hidden = true;
-    status.append(thinking(), el("span", null, "Tailoring the answer to their words…"));
-    card.append(status);
 
     // Rewrite: one short box, the AI rewrites the answer the way you ask.
     const form = el("form", "rewrite");
@@ -298,7 +326,7 @@
 
     const next = el("div", "next");
     const nextP = el("p", null, c.next);
-    next.append(el("span", "label", "Next step"), nextP);
+    next.append(el("span", "label", unknown ? "Logged for the team" : "Next step"), nextP);
     card.append(next);
 
     // Sources stay folded behind one quiet button, then slide open.
@@ -331,11 +359,6 @@
     };
     fillSources(c.sources);
 
-    // Lets callers show "tailoring" and swap in the AI's version when it arrives.
-    card.setTailoring = (on) => {
-      status.lastChild.textContent = "Tailoring the answer to their words…";
-      status.hidden = !on;
-    };
     card.setSources = (list) => {
       if (!list || !list.length || JSON.stringify(list) === JSON.stringify(c.sources)) return;
       c.sources = list;
@@ -360,13 +383,24 @@
     return card;
   }
 
-  // Instant card from the library, then (only when typed and the backend is live)
-  // the AI's tailored wording replaces the answer when it arrives.
-  function getAnswer(text, { typed }, onCard, onRefined) {
-    const card = api.match(text);
-    onCard(card);
-    if (!typed || !api.live) return;
-    api.answer(text).then((ai) => onRefined(ai), () => onRefined(null));
+  // Typed questions get one AI answer (library card if the AI can't be reached).
+  // It is shown once, when ready, never swapped afterwards.
+  const answerFor = (text) => api.answer(text).catch(() => api.match(text));
+
+  // Replace what an open sheet shows, growing or shrinking it smoothly.
+  function swapSheet(sheet, from, to) {
+    const h0 = sheet.offsetHeight, top0 = sheet.offsetTop;
+    to.style.position = "relative";
+    from.replaceWith(to);
+    const h1 = sheet.offsetHeight;
+    const top1 = Math.max(32, (innerHeight - h1) / 2);
+    sheet.style.top = top1 + "px";
+    if (reduceMotion) return;
+    sheet.style.overflow = "hidden";
+    sheet.animate([{ height: h0 + "px", transform: `translateY(${top0 - top1}px)` }, { height: h1 + "px", transform: "none" }],
+      { duration: 460, easing: "cubic-bezier(0.2, 0.85, 0.25, 1)" }).onfinish = () => { sheet.style.overflow = ""; };
+    to.animate([{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "none" }],
+      { duration: 420, delay: 140, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)", fill: "backwards" });
   }
 
   // ---------- Router ----------
@@ -482,7 +516,6 @@
     const cardEl = renderCard(item.card, { onChange: saveBoard });
     openCard = { item, cardEl };
     openSheet(tile, cardEl, { hideSource: true, onClose: () => { openCard = null; } });
-    if (item.tailoring) cardEl.setTailoring(true);
   }
 
   // Asking opens the answer right away. Closing it makes room in the grid,
@@ -493,41 +526,52 @@
     const host = $("ask-results");
     if (filter === "star") setFilter("all");
     const item = { id: newId(), star: false, pin: false };
-    getAnswer(text, { typed }, (card) => {
+    const commit = (card) => {
       item.card = card;
-      item.tailoring = typed && api.live;
       const lastPinned = board.filter((i) => i.pin).pop();
       board.splice(lastPinned ? board.indexOf(lastPinned) + 1 : 0, 0, item);
       saveBoard();
       updateFilterCount();
       updateEmpty();
+    };
+    const opts = {
+      // Closing makes room in the grid and shrinks into the new spot (only once there is an answer).
+      closeTo: () => {
+        if (!item.card) return null;
+        const t = renderTile(item);
+        t.style.visibility = "hidden";
+        const firstFree = [...host.children].find((n) => !n.classList.contains("pinned"));
+        flip(host, () => (firstFree ? firstFree.before(t) : host.append(t)));
+        return t;
+      },
+      onClose: (t) => {
+        openCard = null;
+        if (!t) return;
+        t.style.visibility = "";
+        if (!reduceMotion) {
+          t.classList.add("enter");
+          t.addEventListener("animationend", () => t.classList.remove("enter"), { once: true });
+        }
+      }
+    };
+    const show = (card) => {
       const cardEl = renderCard(card, { onChange: saveBoard });
       openCard = { item, cardEl };
-      openSheet(sourceEl || $("ask-form"), cardEl, {
-        closeTo: () => {
-          const t = renderTile(item);
-          t.style.visibility = "hidden";
-          const firstFree = [...host.children].find((n) => !n.classList.contains("pinned"));
-          flip(host, () => (firstFree ? firstFree.before(t) : host.append(t)));
-          return t;
-        },
-        onClose: (t) => {
-          openCard = null;
-          t.style.visibility = "";
-          if (!reduceMotion) {
-            t.classList.add("enter");
-            t.addEventListener("animationend", () => t.classList.remove("enter"), { once: true });
-          }
-        }
-      });
-      if (item.tailoring) cardEl.setTailoring(true);
-    }, (ai) => {
-      item.tailoring = false;
-      if (ai && ai.answer) { item.card = { ...item.card, answer: ai.answer, next: ai.next || item.card.next }; saveBoard(); }
-      if (openCard && openCard.item === item) {
-        openCard.cardEl.setTailoring(false);
-        if (ai && ai.answer) { openCard.cardEl.setAnswer(ai.answer, ai.next, ai.short); openCard.cardEl.setSources(ai.sources); }
-      }
+      return cardEl;
+    };
+    // Chips: instant answer from the library, no AI call.
+    if (!typed) {
+      commit(api.match(text));
+      openSheet(sourceEl || $("ask-form"), show(item.card), opts);
+      return;
+    }
+    const loader = loadingCard(text);
+    const s = openSheet(sourceEl || $("ask-form"), loader, opts);
+    answerFor(text).then((card) => {
+      loader.stop();
+      commit(card);
+      if (sheetOpen !== s.shut) { renderBoard(true); return; } // closed while waiting
+      swapSheet(s.sheet, loader, show(card));
     });
   }
 
@@ -536,6 +580,47 @@
     $("board-filter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.f === f)));
     renderBoard(true);
   }
+  // Clear all cards: the button asks once, then a dialog asks again.
+  const clearBtn = $("board-clear");
+  let clearArmed = null;
+  const disarm = () => { clearTimeout(clearArmed); clearArmed = null; clearBtn.classList.remove("armed"); clearBtn.textContent = "Clear all"; };
+  clearBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (!board.length) { toast("No cards to clear."); return; }
+    if (!clearArmed) {
+      clearBtn.classList.add("armed");
+      clearBtn.textContent = "Clear all " + board.length + " cards?";
+      clearArmed = setTimeout(disarm, 4000);
+      return;
+    }
+    disarm();
+    const box = el("div", "card confirm");
+    box.append(el("h3", "worry", "Delete all " + board.length + " cards?"), el("p", "sub", "This removes every answer from your grid, starred and pinned too. You can't undo it."));
+    const row = el("div", "confirm-row");
+    const cancel = el("button", "btn btn-quiet", "Keep them");
+    const del = el("button", "btn btn-danger", "Delete all");
+    cancel.type = del.type = "button";
+    row.append(cancel, del);
+    box.append(row);
+    const s = openSheet(clearBtn, box);
+    s.sheet.classList.add("sheet-sm");
+    cancel.addEventListener("click", () => s.shut());
+    del.addEventListener("click", () => { s.shut(); clearBoard(); });
+  });
+  document.addEventListener("click", (e) => { if (clearArmed && e.target !== clearBtn) disarm(); });
+
+  function clearBoard() {
+    const tiles = [...$("ask-results").children];
+    board = [];
+    saveBoard();
+    tiles.forEach((t, i) => {
+      t.style.animationDelay = (reduceMotion ? 0 : Math.min(i, 10) * 40) + "ms";
+      t.classList.add("leave");
+    });
+    setTimeout(() => { $("ask-results").innerHTML = ""; updateFilterCount(); updateEmpty(); toast("All cards cleared"); },
+      reduceMotion ? 0 : 300 + Math.min(tiles.length, 10) * 40);
+  }
+
   $("board-filter").addEventListener("click", (e) => {
     const b = e.target.closest("button");
     if (b) setFilter(b.dataset.f);
@@ -638,14 +723,14 @@
     if (opening && !item.filled) {
       item.filled = true;
       const body = item.el.querySelector(".expand > div");
-      getAnswer(item.quote, { typed: true }, (card) => {
+      const wait = el("div", "inline-load");
+      wait.append(thinking(), el("span", "load-msg", "Writing the answer…"));
+      body.append(wait);
+      answerFor(item.quote).then((card) => {
         item.card = card;
         item.cardEl = renderCard(card);
-        body.append(item.cardEl);
-        if (api.live) item.cardEl.setTailoring(true);
-      }, (ai) => {
-        item.cardEl.setTailoring(false);
-        if (ai && ai.answer) { item.cardEl.setAnswer(ai.answer, ai.next, ai.short); item.cardEl.setSources(ai.sources); }
+        wait.replaceWith(item.cardEl);
+        if (!reduceMotion) item.cardEl.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 380, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" });
       });
     }
   }
