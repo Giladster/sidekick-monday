@@ -130,6 +130,8 @@
     trash: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 4h11M6.5 4V2.8h3V4M4 4l.7 9.2h6.6L12 4M6.7 6.8v4M9.3 6.8v4"/></svg>',
     star: '<svg viewBox="0 0 16 16"><path d="M8 1.8l1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6z" fill="currentColor"/></svg>',
     pin: '<svg viewBox="0 0 16 16"><path d="M10.4 1.3l4.3 4.3-1.5.6-2.6 2.6.3 3.5-1.4 1.4-2.9-2.9-4.3 4.3-.9-.9 4.3-4.3-2.9-2.9 1.4-1.4 3.5.3 2.6-2.6z" fill="currentColor"/></svg>',
+    chevL: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg>',
+    chevR: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5L10.5 8 6 12.5"/></svg>',
     copy: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="2"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg>',
     spark: '<svg viewBox="0 0 16 16"><path d="M8 1l1.5 4.5L14 7l-4.5 1.5L8 13l-1.5-4.5L2 7l4.5-1.5zM13 11l.6 1.4L15 13l-1.4.6L13 15l-.6-1.4L11 13l1.4-.6z" fill="currentColor"/></svg>'
   };
@@ -1400,12 +1402,13 @@
   $("practice-skip").addEventListener("click", nextPractice);
 
   // ---------- Analytics ----------
-  let insightsLoaded = false;
 
   function lineChart(host, series) {
     const W = 680, H = 230, L = 36, R = 20, T = 18, B = 30;
-    const step = 40;
-    const max = Math.ceil(Math.max(...series.map((d) => d.count)) / step) * step;
+    const top = Math.max(...series.map((d) => d.count));
+    const raw = top / 3, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 5, 10].map((m) => m * mag).find((v) => v >= raw);
+    const max = Math.ceil(top / step) * step;
     const x = (i) => L + (i * (W - L - R)) / (series.length - 1);
     const y = (v) => T + (1 - v / max) * (H - T - B);
 
@@ -1424,7 +1427,9 @@
       s.append(t);
     }
     series.forEach((d, i) => {
-      if (i % 2 && i !== series.length - 1) return;
+      const every = Math.ceil(series.length / 7);
+      if (i % every && i !== series.length - 1) return;
+      if (i !== series.length - 1 && series.length - 1 - i < every / 2) return;
       const t = svg("text", { x: x(i), y: H - 6, "text-anchor": "middle" });
       t.textContent = d.label;
       s.append(t);
@@ -1452,7 +1457,7 @@
       hit.addEventListener("mouseenter", () => {
         cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i));
         cross.setAttribute("visibility", "visible");
-        tip.textContent = "Week of " + d.label + ": " + d.count;
+        tip.textContent = (d.tip || "Week of " + d.label) + ": " + d.count;
         const box = s.getBoundingClientRect();
         tip.style.left = (x(i) / W) * box.width + "px";
         tip.style.top = (y(d.count) / H) * box.height - 12 + "px";
@@ -1473,6 +1478,8 @@
     const small = el("span", null, "objections");
     center.append(big, small);
     const legend = el("ul", "legend");
+    const tip = el("div", "chart-tip donut-tip");
+    tip.hidden = true;
     let offset = 0;
     const arcs = [];
     cats.forEach((c) => {
@@ -1491,19 +1498,36 @@
       li.append(el("span", null, c.label), el("b", null, Math.round((c.count / total) * 100) + "%"));
       legend.append(li);
 
+      const pct = Math.round((c.count / total) * 100);
       const on = () => {
-        arcs.forEach((a) => (a.style.opacity = a === arc ? 1 : 0.3));
+        arcs.forEach((a) => a.classList.toggle("dim", a !== arc));
+        arc.classList.add("on");
+        li.classList.add("on");
         big.textContent = c.count;
         small.textContent = c.label;
+        tip.innerHTML = "";
+        const dot = el("i");
+        dot.dataset.cat = c.label;
+        tip.append(dot, el("b", null, c.label), el("span", null, c.count + " objections · " + pct + "%"));
+        tip.hidden = false;
       };
       const off = () => {
-        arcs.forEach((a) => (a.style.opacity = 1));
+        arcs.forEach((a) => a.classList.remove("dim", "on"));
+        li.classList.remove("on");
         big.textContent = total;
         small.textContent = "objections";
+        tip.hidden = true;
       };
+      // The tooltip follows the pointer around the ring.
+      arc.addEventListener("mousemove", (e) => {
+        const box = wrap.getBoundingClientRect();
+        tip.style.left = e.clientX - box.left + "px";
+        tip.style.top = e.clientY - box.top - 14 + "px";
+      });
       [arc, li].forEach((n) => { n.addEventListener("mouseenter", on); n.addEventListener("mouseleave", off); });
+      li.addEventListener("mouseenter", () => { tip.hidden = true; }); // the center already shows it
     });
-    wrap.append(s, center);
+    wrap.append(s, center, tip);
     host.append(wrap, legend);
   }
 
@@ -1516,14 +1540,54 @@
   });
   sortable(dash, ".panel", () => store.set("sk.dash", [...dash.children].map((p) => p.dataset.id)));
 
+  // Analytics is sample data. The base month is reshaped for the chosen time frame,
+  // with steady, repeatable numbers (the same range always shows the same data).
+  let insBase = null;
+  let insRange = { days: 30 };
+  const DAY = 864e5;
+  const fmtDay = (d) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  function seeded(seed) {
+    let t = seed >>> 0;
+    return () => { t += 0x6d2b79f5; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; };
+  }
+  function shapeInsights(base, range) {
+    const end = range.to ? new Date(range.to) : new Date();
+    const days = range.days;
+    const rand = seeded(days * 7919 + Math.floor(end.getTime() / DAY));
+    const perDay = base.heard / 30;
+    const k = days / 30;
+    // Line chart: daily points for short ranges, weekly up to ~4 months, then monthly.
+    const bucket = days <= 31 ? 1 : days <= 120 ? 7 : 30;
+    const n = Math.max(2, Math.ceil(days / bucket));
+    const series = [];
+    for (let i = 0; i < n; i++) {
+      const start = new Date(end.getTime() - (n - 1 - i) * bucket * DAY);
+      const trend = 0.75 + 0.5 * (i / (n - 1));
+      const count = Math.max(1, Math.round(perDay * bucket * trend * (0.85 + rand() * 0.3)));
+      const label = fmtDay(start);
+      series.push({ label, count, tip: bucket === 1 ? label : bucket === 7 ? "Week of " + label : "Month from " + label });
+    }
+    const categories = base.categories.map((c) => ({ ...c, count: Math.max(1, Math.round(c.count * k * (0.85 + rand() * 0.3))) }));
+    const heard = categories.reduce((t, c) => t + c.count, 0);
+    const trending = base.trending.map((t) => ({ ...t, count: Math.max(1, Math.round(t.count * k * (0.85 + rand() * 0.3))), change: Math.round(-8 + rand() * 30) }))
+      .sort((x, y) => y.count - x.count);
+    const unanswered = base.unanswered.map((g) => ({ ...g, count: Math.max(1, Math.round(g.count * k)) }));
+    const label = range.from ? fmtDay(new Date(range.from)) + " – " + fmtDay(end) : "last " + days + " days";
+    return { label, heard, change: Math.round(4 + rand() * 18), series, categories, trending, unanswered };
+  }
+
   async function loadInsights() {
-    if (insightsLoaded) return;
-    insightsLoaded = true;
-    const d = await api.insights();
-    $("ins-period").textContent = "Objections heard, " + d.period.toLowerCase();
+    if (!insBase) insBase = await api.insights();
+    renderInsights();
+  }
+
+  function renderInsights() {
+    const d = shapeInsights(insBase, insRange);
+    $("ins-period").textContent = "Objections heard, " + d.label;
     $("ins-heard").textContent = d.heard.toLocaleString();
-    $("ins-delta").textContent = "↑ " + d.change + "% vs last month";
-    lineChart($("ins-line"), d.weekly);
+    $("ins-delta").textContent = "↑ " + d.change + "% vs " + (insRange.from ? "the period before" : d.label.replace("last", "previous"));
+    ["ins-line", "ins-donut", "ins-trending", "ins-gaps"].forEach((id) => { $(id).innerHTML = ""; });
+    lineChart($("ins-line"), d.series);
     donut($("ins-donut"), d.categories);
 
     const max = Math.max(...d.trending.map((t) => t.count));
@@ -1555,7 +1619,104 @@
       row.append(p, b);
       gaps.append(row);
     });
+    stagger(document.querySelectorAll("#ins-line, #ins-donut, #ins-trending, #ins-gaps, .dash .headline"), 50);
   }
+
+  // Time frame toggle: 7 / 30 / 60 / 90 days, or Custom with a small calendar.
+  const rangeSeg = $("ins-range");
+  const customBtn = rangeSeg.querySelector('[data-d="custom"]');
+  const pressRange = (key) => rangeSeg.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.d === key)));
+  rangeSeg.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    e.stopPropagation();
+    if (b.dataset.d === "custom") { pressRange("custom"); openCal(); return; }
+    closeCal(true);
+    customBtn.textContent = "Custom";
+    pressRange(b.dataset.d);
+    insRange = { days: Number(b.dataset.d) };
+    renderInsights();
+  });
+
+  // Calendar: click a start day, then an end day, then Apply.
+  const cal = $("cal");
+  let calMonth, calFrom = null, calTo = null, calHover = null;
+  const dayKey = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  function openCal() {
+    const today = new Date();
+    calMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    calFrom = insRange.from || null;
+    calTo = insRange.from ? dayKey(new Date(insRange.to)) : null;
+    drawCal();
+    cal.hidden = false;
+  }
+  function closeCal(silent) {
+    if (cal.hidden) return;
+    hide(cal);
+    if (!silent && !insRange.from) pressRange(String(insRange.days));
+  }
+  function drawCal() {
+    cal.innerHTML = "";
+    const head = el("div", "cal-head");
+    const prev = iconButton("Previous month", "chevL");
+    const next = iconButton("Next month", "chevR");
+    const thisMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    next.disabled = calMonth >= thisMonth;
+    prev.addEventListener("click", (e) => { e.stopPropagation(); calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); drawCal(); });
+    next.addEventListener("click", (e) => { e.stopPropagation(); calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); drawCal(); });
+    head.append(prev, el("strong", null, calMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })), next);
+    const grid = el("div", "cal-grid");
+    ["S", "M", "T", "W", "T", "F", "S"].forEach((w) => grid.append(el("span", "cal-w", w)));
+    for (let i = 0; i < calMonth.getDay(); i++) grid.append(el("span"));
+    const days = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 0).getDate();
+    const todayKey = dayKey(new Date());
+    const lo = calFrom, hi = calTo || (calFrom && calHover) || null;
+    const [a, z] = lo && hi ? [Math.min(lo, hi), Math.max(lo, hi)] : [lo, lo];
+    for (let d = 1; d <= days; d++) {
+      const key = dayKey(new Date(calMonth.getFullYear(), calMonth.getMonth(), d));
+      const b = el("button", "cal-d", String(d));
+      b.type = "button";
+      b.disabled = key > todayKey;
+      if (key === todayKey) b.classList.add("today");
+      if (a && key >= a && key <= z) b.classList.add("in");
+      if (key === a || key === z) b.classList.add("end");
+      b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!calFrom || calTo) { calFrom = key; calTo = null; }
+        else { calTo = key; if (calTo < calFrom) [calFrom, calTo] = [calTo, calFrom]; }
+        drawCal();
+      });
+      b.addEventListener("mouseenter", () => { if (calFrom && !calTo) { calHover = key; markRange(); } });
+      grid.append(b);
+    }
+    const foot = el("div", "cal-foot");
+    const picked = el("span", "cal-picked", calFrom ? fmtDay(new Date(calFrom)) + (calTo ? " – " + fmtDay(new Date(calTo)) : " – pick an end day") : "Pick a start day");
+    const apply = el("button", "btn btn-primary", "Apply");
+    apply.type = "button";
+    apply.disabled = !(calFrom && calTo);
+    apply.addEventListener("click", (e) => {
+      e.stopPropagation();
+      insRange = { from: calFrom, to: calTo, days: Math.round((calTo - calFrom) / DAY) + 1 };
+      customBtn.textContent = fmtDay(new Date(calFrom)) + " – " + fmtDay(new Date(calTo));
+      closeCal(true);
+      renderInsights();
+    });
+    foot.append(picked, apply);
+    cal.append(head, grid, foot);
+  }
+  // Live preview of the range while choosing the end day.
+  function markRange() {
+    const lo = Math.min(calFrom, calHover), hi = Math.max(calFrom, calHover);
+    cal.querySelectorAll(".cal-d").forEach((b) => {
+      const key = dayKey(new Date(calMonth.getFullYear(), calMonth.getMonth(), Number(b.textContent)));
+      b.classList.toggle("in", key >= lo && key <= hi);
+      b.classList.toggle("end", key === lo || key === hi);
+    });
+  }
+  cal.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", () => closeCal());
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeCal(); });
+
 
   // ---------- Greeting: a small wave runs through the letters when Hen arrives ----------
   (function hello() {

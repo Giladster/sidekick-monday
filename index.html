@@ -482,8 +482,45 @@ textarea::placeholder { color: var(--muted); }
 .donut-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
 .donut { width: 168px; height: 168px; flex: none; position: relative; }
 .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.donut path { transition: opacity 0.2s; }
-.donut .center {
+.donut circle { transition: opacity 0.25s, stroke-width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); cursor: pointer; }
+.donut circle.dim { opacity: 0.28; }
+.donut circle.on { stroke-width: 30; }
+.legend li { transition: opacity 0.25s; cursor: default; }
+.legend:has(li.on) li:not(.on) { opacity: 0.45; }
+.donut-tip {
+  display: flex; align-items: center; gap: 8px; white-space: nowrap; pointer-events: none; z-index: 3;
+  transform: translate(-50%, -100%);
+}
+.donut-tip i { width: 9px; height: 9px; border-radius: 3px; background: var(--c); flex: none; }
+.donut-tip span { opacity: 0.8; font-weight: 500; }
+/* Time frame + calendar */
+.ins-bar { position: relative; display: flex; margin-top: -16px; z-index: 5; }
+#ins-range { max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+#ins-range button { flex: none; white-space: nowrap; }
+@media (max-width: 640px) { #ins-range button { padding: 7px 10px; font-size: 14px; } .cal-pop { width: min(300px, calc(100vw - 32px)); } }
+.cal-pop {
+  position: absolute; top: calc(100% + 10px); left: 0; width: 300px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.16); display: flex; flex-direction: column; gap: 12px;
+}
+.cal-head { display: flex; align-items: center; justify-content: space-between; }
+.cal-head strong { font-size: 16px; }
+.cal-head .icon-btn:disabled { opacity: 0.3; cursor: default; transform: none; box-shadow: none; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; }
+.cal-w { font-size: 12px; font-weight: 600; color: var(--muted); padding: 4px 0; }
+.cal-d {
+  border: 0; background: none; font: inherit; font-size: 14px; height: 34px; border-radius: 10px; cursor: pointer; color: var(--fg);
+  transition: background 0.18s, color 0.18s;
+}
+.cal-d:hover:not(:disabled) { background: var(--fill); }
+.cal-d:disabled { color: var(--muted); opacity: 0.4; cursor: default; }
+.cal-d.today { font-weight: 700; color: var(--accent); }
+.cal-d.in { background: color-mix(in srgb, var(--accent) 14%, transparent); border-radius: 0; }
+.cal-d.end { background: var(--accent); color: #fff; border-radius: 10px; }
+.cal-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cal-picked { font-size: 14px; color: var(--muted-strong); font-weight: 500; }
+.cal-foot .btn { padding: 8px 18px; font-size: 15px; }
+.donut .center { pointer-events: none;
   position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
 }
 .donut .center strong { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
@@ -1055,6 +1092,16 @@ textarea::placeholder { color: var(--muted); }
       <h1>Analytics.</h1>
       <p class="sub">What customers push back on, and where it's heading. Drag cards to arrange your dashboard.</p>
     </header>
+    <div class="ins-bar">
+      <div class="mini-seg" id="ins-range" role="group" aria-label="Time frame">
+        <button type="button" data-d="7" aria-pressed="false">7 days</button>
+        <button type="button" data-d="30" aria-pressed="true">30 days</button>
+        <button type="button" data-d="60" aria-pressed="false">60 days</button>
+        <button type="button" data-d="90" aria-pressed="false">90 days</button>
+        <button type="button" data-d="custom" aria-pressed="false">Custom</button>
+      </div>
+      <div class="cal-pop" id="cal" role="dialog" aria-label="Pick dates" hidden></div>
+    </div>
     <div class="dash">
       <div class="panel span-8" data-id="trend">
         <span class="label" id="ins-period">Objections heard</span>
