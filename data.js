@@ -166,11 +166,11 @@ window.COACH_DATA = {
 
   fallback: {
     id: "new", category: "New",
-    short: "We don't have an approved answer yet, so start with a question.",
+    short: "No approved answer yet.",
     worry: "Something new.",
-    answer: "Ask what's behind it: “What would need to be true for this to work for you?”",
+    answer: "“What would need to be true for this to work for you?”",
     keyPoints: [],
-    next: "We logged it so the team can add an approved answer.",
+    next: "We will add an approved answer for this soon.",
     sources: [{ title: "How monday AI handles your data", url: "https://support.monday.com/hc/en-us/articles/23227256685842-AI-FAQs" }]
   },
 
