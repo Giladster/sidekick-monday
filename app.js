@@ -1151,8 +1151,6 @@
   // Your results are kept in this browser. History before this month and the team board are sample data.
   let attempts = store.get("sk.attempts", []);
   let practiceMode = "all";
-  const BASE_XP = 2140, XP_LEVEL = 500;
-  const LEVELS = ["Rookie", "Listener", "Problem solver", "Objection handler", "Trusted advisor", "Objection pro", "Closer", "Legend"];
   const thisMonth = () => new Date().toISOString().slice(0, 7);
   const monthName = (d = new Date()) => d.toLocaleString("en-US", { month: "long" });
 
@@ -1160,10 +1158,7 @@
     const mine = attempts.filter((a) => a.t.slice(0, 7) === thisMonth());
     const sum = 7.0 * 6 + mine.reduce((n, a) => n + a.score, 0); // 6 sample attempts earlier this month
     const count = 6 + mine.length;
-    const xp = BASE_XP + attempts.reduce((n, a) => n + a.score * 10, 0);
-    const days = new Set(attempts.map((a) => a.t.slice(0, 10)));
-    const today = new Date().toISOString().slice(0, 10);
-    return { avg: sum / count, count, xp, streak: 4 + (days.has(today) ? 1 : 0) };
+    return { avg: sum / count, count };
   }
 
   function stat(label, value, foot) {
@@ -1178,21 +1173,8 @@
   function renderPracticeStats() {
     const st = practiceStats();
     const last = D.practiceHistory[D.practiceHistory.length - 1];
-    const level = Math.floor(st.xp / XP_LEVEL) + 1;
-    const into = st.xp % XP_LEVEL;
     const host = $("pr-stats");
     host.innerHTML = "";
-
-    const xp = el("div", "xp");
-    const bar = el("div");
-    bar.style.width = (into / XP_LEVEL) * 100 + "%";
-    xp.append(bar);
-    const lvlFoot = el("div");
-    lvlFoot.style.display = "grid"; lvlFoot.style.gap = "6px";
-    lvlFoot.append(xp, el("small", null, (XP_LEVEL - into) + " XP to level " + (level + 1)));
-    host.append(stat("Level " + level, LEVELS[Math.min(level - 1, LEVELS.length - 1)], lvlFoot));
-
-    host.append(stat("Streak", st.streak + " days", el("small", null, "Practice today to keep it going")));
 
     const diff = st.avg - last.avg;
     const foot = el("small");
@@ -1200,7 +1182,7 @@
     foot.append(d, document.createTextNode(" vs " + last.month));
     host.append(stat("Average score, " + monthName(), st.avg.toFixed(1), foot));
 
-    host.append(stat("Practiced this month", String(st.count), el("small", null, "objections answered")));
+    host.append(stat("Practiced this month", String(st.count), el("small", null, "objections")));
   }
 
   const SVG = "http://www.w3.org/2000/svg";
@@ -1370,12 +1352,9 @@
       attempts.push({ t: new Date().toISOString(), score: r.score });
       store.set("sk.attempts", attempts);
       markPracticed($("practice-q").dataset.raw);
-      const before = Math.floor((practiceStats().xp - r.score * 10) / XP_LEVEL);
       renderPracticeStats();
       renderMonthly();
       renderLeaderboard();
-      if (Math.floor(practiceStats().xp / XP_LEVEL) > before) toast("Level up! You reached level " + (before + 2) + ".");
-      else toast("+" + r.score * 10 + " XP");
       $("practice-submit").hidden = true;
       $("practice-skip").textContent = "Next objection";
     } catch (e) {

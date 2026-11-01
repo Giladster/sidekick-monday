@@ -776,7 +776,23 @@ textarea::placeholder { color: var(--muted); }
 .drawer-foot { display: flex; flex-direction: column; gap: 10px; }
 .drawer-foot .btn { width: 100%; text-align: center; text-decoration: none; }
 .drawer-foot .note-done { margin: 0; font-weight: 600; display: flex; gap: 8px; align-items: center; }
-.pr-tools { display: flex; gap: 10px; margin-top: -24px; }
+/* Practice top row: mode + list on the left, two small stats on the right */
+.pr-top { display: flex; align-items: center; justify-content: space-between; gap: 14px 24px; flex-wrap: wrap; margin-top: -12px; }
+.pr-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+#view-practice .stats { display: flex; gap: 12px; flex-wrap: wrap; }
+#view-practice .stat { flex-direction: row; align-items: baseline; gap: 10px; padding: 10px 18px; border-radius: 16px; }
+#view-practice .stat .label { font-size: 14px; }
+#view-practice .stat strong { font-size: 22px; }
+#view-practice .stat small { font-size: 13px; }
+/* Practice fits one screen: tighter spacing so the question and answer show without scrolling */
+#view-practice { gap: 24px; margin-top: -20px; }
+#view-practice .hero { flex-direction: row; align-items: baseline; gap: 18px; flex-wrap: wrap; }
+#view-practice h1 { font-size: 40px; }
+#view-practice .pr-top { margin-top: 0; }
+#view-practice .practice-split .stack { gap: 18px; }
+#view-practice .customer { padding: 24px 30px; gap: 16px; }
+#view-practice .customer blockquote { font-size: 24px; padding: 18px 22px; }
+#view-practice .reply { padding: 20px 26px; }
 #pr-mode { margin-bottom: 0; }
 .banner {
   display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
@@ -1042,13 +1058,15 @@ textarea::placeholder { color: var(--muted); }
       <h1>Practice.</h1>
       <p class="sub">A tough customer. Your answer. A score.</p>
     </header>
-    <div class="stats" id="pr-stats"></div>
-    <div class="mini-seg" id="pr-mode" role="group" aria-label="What to practice">
-      <button type="button" data-m="all" aria-pressed="true">All objections</button>
-      <button type="button" data-m="list" aria-pressed="false">My list <span id="pr-list-n">0</span></button>
-    </div>
-    <div class="pr-tools">
-      <button class="btn btn-quiet" id="pr-view-list" type="button">View my list</button>
+    <div class="pr-top">
+      <div class="pr-tools">
+        <div class="mini-seg" id="pr-mode" role="group" aria-label="What to practice">
+          <button type="button" data-m="all" aria-pressed="true">All objections</button>
+          <button type="button" data-m="list" aria-pressed="false">My list <span id="pr-list-n">0</span></button>
+        </div>
+        <button class="btn btn-quiet" id="pr-view-list" type="button">View my list</button>
+      </div>
+      <div class="stats" id="pr-stats"></div>
     </div>
     <div class="banner" id="pr-done" hidden>
       <span class="banner-icon" aria-hidden="true">&#10003;</span>
