@@ -631,6 +631,11 @@ textarea::placeholder { color: var(--muted); }
 }
 .search:focus { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
 .obj-bar .chips { flex: 1 1 auto; }
+/* Ask chips: a fixed 2 by 2 grid, long text ends with "…" (full text on hover) */
+#ask-chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#ask-chips .chip { min-width: 0; }
+#ask-chips .chip .t { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 640px) { #ask-chips { grid-template-columns: 1fr; } }
 .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
 .obj-list-cta { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .obj-list-cta .btn { text-decoration: none; }

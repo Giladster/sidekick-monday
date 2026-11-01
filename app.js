@@ -648,8 +648,10 @@
   // Chips show the most common objections, straight from analytics.
   // They answer from the library only, so they never cost an AI call.
   const commonReady = api.common().then((list) => {
-    list.forEach((c) => {
-      const b = el("button", "chip", c.text);
+    list.slice(0, 4).forEach((c) => {
+      const b = el("button", "chip");
+      b.append(el("span", "t", c.text));
+      b.title = c.text;
       b.type = "button";
       b.dataset.cat = c.category;
       b.addEventListener("click", () => ask(b.textContent, false, b));
